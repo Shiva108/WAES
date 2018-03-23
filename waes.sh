@@ -2,12 +2,15 @@
 # 2018 by Shiva @ CPH:SEC & Cyberium
 # Creds to Common Exploits, Supra, Offensive & lisandrogallo
 
+# WAE&S requires vulners.nse :
+# https://github.com/vulnersCom/nmap-vulners
+
 # Script begins
 #===============================================================================
 
 
 VERSION="0.0.1a"
-# Where to find vulners.nse
+# Where to find vulners.nse :
 VULNERSDIR="/home/e"
 
 echo ""
@@ -35,6 +38,12 @@ if [ $# -eq 0 ]
   then
     usage
     echo "No arguments supplied"
+    exit 1
+fi
+
+if [ $1 == "-h" ]
+  then
+    usage
     exit 1
 fi
 
@@ -106,18 +115,21 @@ fi
 echo -e "Target: is $2 "
 
 # Whatweb
-# echo -e "[+] Looking up "$2" with whatweb"
-# whatweb -a3 $2 | tee $2_whatweb.txt
+echo -e "[+] Looking up "$2" with whatweb"
+whatweb -a3 $2 | tee $2_whatweb.txt
 
 # nmap
-# echo -e "[+] nmap with http-enum on $2"
-# nmap -sSV -Pn -O --script http-enum $2 -oA $2_nmap_http-enum
-# echo -e "[+] nmap with vulners on $2"
-# nmap -sSV -Pn -A --script $VULNERSDIR/vulners.nse $2 -oA $2_nmap_vulners
+echo -e "[+] nmap with http-enum on $2"
+nmap -sSV -Pn -O --script http-enum $2 -oA $2_nmap_http-enum
+echo -e "[+] nmap with vulners on $2"
+nmap -sSV -Pn -A --script $VULNERSDIR/vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
-echo -e "[+] nikto with on $2"
+echo -e "[+] nikto on $2"
 nikto -h $2 -C all | tee $2_nikto.txt
 
 # uniscan
+echo -e "[+] uniscan on $2"
+uniscan -u $2 -qweds | tee $2_uniscan.txt
+
 
