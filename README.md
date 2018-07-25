@@ -15,3 +15,13 @@ Usage: waes.sh -u {url}
        -h shows this help
        -u url to test
 
+
+
+## Method
+
+WAES runs whatweb, nmap http-enum with vulners.nse, nikto and uniscan against target while dumping results files.
+
+
+## Coming
+
+Gobuster and others will be added soon.
