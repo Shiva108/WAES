@@ -1,5 +1,5 @@
-# WAES
-Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result
+## WAES
+Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
 
 #############################################################
 
@@ -17,11 +17,11 @@ Usage: waes.sh -u {url}
 
 
 
-## Method
+### Method
 
 WAES runs whatweb, nmap http-enum with vulners.nse, nikto and uniscan against target while dumping results files.
 
 
-## Coming
+### Coming later
 
 Gobuster and others will be added soon.
