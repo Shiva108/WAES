@@ -19,7 +19,7 @@ Usage: waes.sh -u {url}
 
 ### Method
 
-WAES runs whatweb, nmap http-enum with vulners.nse, nikto and uniscan against target while dumping results files.
+WAES runs whatweb, nmap with http-enum and vulners.nse, nikto and uniscan against target while dumping results files.
 
 
 ### Coming later
