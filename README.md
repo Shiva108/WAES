@@ -1,3 +1,5 @@
+**Note** WAES requires vulners.nse : https://github.com/vulnersCom/nmap-vulners \
+
 ## WAES
 Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
 
