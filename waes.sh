@@ -14,6 +14,7 @@ VERSION="0.0.2b"
 # Where to find vulners.nse :
 VULNERSDIR="nmap-vulners"
 SECLISTDIR="SecLists"
+REPORTDIR="report" # report directory
 
 echo ""
 echo -e "\e[00;32m#############################################################\e[00m"
@@ -35,16 +36,9 @@ echo "       -u url to test without http or https e.g. testsite.com"
 echo ""
 }
 
+# Checks for input parameters
 : ${1?"No arguments supplied - run waes -h for help or cat README.md"}
 
-
-# Deprecated! - Check input parameters
-#if [ $ -eq 0 ]
-#  then
-#    usage
-#    echo "No arguments supplied"
-#    exit 1
-#fi
 
 if [ $1 == "-h" ]
   then
@@ -58,13 +52,7 @@ if [[ "$1" != "-u" && "$1" != "-h" ]]; then
    exit 1
 fi
 
-# Bug to fix in later version
-# if [ -u "$1" == ""]; then
-#     usage
-#     echo "No argument supplied"
-# fi
-
-#Check for nmap
+# Check for nmap
 which nmap>/dev/null
 if [ $? -eq 0 ]
         then
@@ -74,20 +62,6 @@ else
        		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap program, install and try again"
         exit 1
 fi
-
-#Check for vulners.nse
-#locate vulners>/dev/null
-#if [ $? -eq 0 ]
-#        then
-#                echo ""
-#else
-#                echo ""
-#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap script vulners.nse, install and try again"
-#        exit 1
-#fi
-
-# Removing HTTP and HTTPS
-# $2=echo $2 | rev | cut -d '/' -f 1 | rev
 
 #Check for nikto
 which nikto>/dev/null
@@ -120,28 +94,29 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 #
-echo -e "Target: is $2 "
+echo -e "Target: $2 "
 
 # Whatweb
-echo -e "[+] Looking p "$2" with whatweb"
-whatweb -a3 $2 | tee report/$2_whatweb.txt
+# echo -e "[+] Looking p "$2" with whatweb"
+# whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
 # nmap
-#echo -e "[+] nmap with standard scripts (-sC) on $2"
-#nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
-#echo -e "[+] nmap with http-enum on $2"
-#nmap -sSV -Pn -O -vv --script http-enum $2 -oA report/$2_nmap_http-enum
+echo -e "[+] nmap with standard scripts (-sC) on $2"
+nmap -sSCV -Pn -T4 -vv $2 -oA ${REPORTDIR}/$2_nmap_sSCV
+echo -e "[+] nmap with http-enum on $2"
+nmap -sSV -Pn -O -T4 -vv --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
 echo -e "[+] nmap with vulners on $2"
-nmap -sSV -Pn -A -vv --script $VULNERSDIR/vulners.nse $2 -oA $2_nmap_vulners
+nmap -sSV -Pn -A -T4 -vv --script ${VULNERSDIR}/vulners.nse $2 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
 # echo -e "[+] nikto on $2"
-# nikto -h $2 -C all -ask no -evasion A | tee report/$2_nikto.txt
+# nikto -h $2 -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
 
 ## uniscan
 #echo -e "[+] uniscan on $2"
-#uniscan -u $2 -qweds | tee report/$2_uniscan.txt
+#uniscan -u $2 -qweds | tee $REPORTDIR/$2_uniscan.txt
 
 # Supergobuster: gobuster + dirb
-# ./supergobuster.sh $2 | tee report/$2_supergobust.txt
+# ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
+echo "WAES is done. Find results in:" ${REPORTDIR}
