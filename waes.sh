@@ -98,8 +98,8 @@ fi
 echo -e "Target: $2 "
 
 # Whatweb
-# echo -e "[+] Looking p "$2" with whatweb"
-# whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
+echo -e "[+] Looking p "$2" with whatweb"
+whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
 # nmap
 echo -e "[+] nmap with standard scripts (-sC) on $2"
@@ -107,19 +107,19 @@ nmap -sSCV -Pn -T4 -vv $2 -oA ${REPORTDIR}/$2_nmap_sSCV
 echo -e "[+] nmap with http-enum on $2"
 nmap -sSV -Pn -O -T4 -vv --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
 echo -e "[+] nmap with various HTTP vuln nse scripts on $2"
-nmap -sSV -Pn -A -T4 -vv --script --script http-vuln*.nse $2 -oA ${REPORTDIR}/$2_nmap_http-va
+nmap -sSV -Pn -T4 -vv --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
 echo -e "[+] nmap with vulners on $2"
 nmap -sSV -Pn -A -T4 -vv --script ${VULNERSDIR}/vulners.nse $2 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
-# echo -e "[+] nikto on $2"
-# nikto -h $2 -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
+echo -e "[+] nikto on $2"
+nikto -h $2 -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
 
-## uniscan
-#echo -e "[+] uniscan on $2"
-#uniscan -u $2 -qweds | tee $REPORTDIR/$2_uniscan.txt
+# uniscan
+echo -e "[+] uniscan on $2"
+uniscan -u $2 -qweds | tee $REPORTDIR/$2_uniscan.txt
 
 # Supergobuster: gobuster + dirb
-# ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
+./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
-echo "[+] WAES is done. Find results in:" ${REPORTDIR}
+echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
