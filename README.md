@@ -21,7 +21,8 @@ Usage: waes.sh -u {url}
 
 ### Method
 
-WAES runs
+WAES runs ..
+
 + whatweb
 + OSIRA (same author)
 + nmap
@@ -35,7 +36,11 @@ WAES runs
   - dirb with multiple lists
 
 
-against target while dumping results files in report/ folder.
+.. against target while dumping results files in report/ folder.
+
+
+### To Do
+Simplify tools check.
 
 
 

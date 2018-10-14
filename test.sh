@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-
-# Nothing to see here.
-
-#!/usr/bin/env bash
 # 2018 by Shiva @ CPH:SEC
 
 # WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
@@ -14,13 +10,14 @@
 #===============================================================================
 
 
+# vars
 VERSION="0.0.3b"
-# Where to find vulners.nse :
-VULNERSDIR="nmap-vulners"
-SECLISTDIR="SecLists"
-REPORTDIR="report" # report directory
+VULNERSDIR="nmap-vulners" # Where to find vulners.nse
+REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
+# SECLISTDIR="SecLists"
 
+#banner / help message
 echo ""
 echo -e "\e[00;32m#############################################################\e[00m"
 echo ""
@@ -57,6 +54,8 @@ if [[ "$1" != "-u" && "$1" != "-h" ]]; then
    exit 1
 fi
 
+
+
 # Check for nmap
 which nmap>/dev/null
 if [ $? -eq 0 ]
@@ -89,18 +88,3 @@ else
        		echo -e "\e[01;31m[!]\e[00m Unable to find the required uniscan program, install and try again"
         exit 1
 fi
-
-# Check if root
-if [[ $EUID -ne 0 ]]; then
-        echo ""
-        echo -e "\e[01;31m[!]\e[00m This program must be run as root. Run again with 'sudo'"
-        echo ""
-        exit 1
-fi
-
-#
-echo -e "Target: $2 "
-
-echo -e "[+] OSIRA on:" $2
-OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
-mv $2.txt ${REPORTDIR}/$2_osira.txt

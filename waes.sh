@@ -102,16 +102,16 @@ echo -e "Target: $2 "
 echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
-echo -e "\e[00;32m [+] OSIRA on:" $2 "\e[00m"
+echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
 OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
 mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
 echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
 nmap -sSCV -Pn -T4 $2 -oA ${REPORTDIR}/$2_nmap_sSCV
-echo -e "\e[00;32m [+] nmap with http-enum on $2" "\e[00m"
-nmap -sSV -Pn -O -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
-echo -e "\e[00;32m [+] nmap with various HTTP vuln nse scripts on $2" "\e[00m"
+echo -e "\e[00;32m [+] nmap with http-enum against $2" "\e[00m"
+nmap -sSV -Pn -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
+echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
 nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
 echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
 echo ${VULNERSDIR}"/vulners.nse"
