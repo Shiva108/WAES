@@ -98,8 +98,12 @@ fi
 echo -e "Target: $2 "
 
 # Whatweb
-echo -e "[+] Looking p "$2" with whatweb"
+echo -e "[+] Looking up "$2" with whatweb"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
+
+echo -e "[+] OSIRA on:" $2
+OSIRA/osira.sh -u $2| tee ${REPORTDIR}/$2_osira.txt
+mv OSIRA/*.txt ${REPORTDIR}/
 
 # nmap
 echo -e "[+] nmap with standard scripts (-sC) on $2"
