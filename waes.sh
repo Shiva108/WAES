@@ -135,9 +135,13 @@ whatweb -a3 $2 | tee report/$2_whatweb.txt
 #nmap -sSV -Pn -A -vv --script vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
-echo -e "[+] nikto on $2"
-nikto -h $2 -C all -ask no -evasion A | tee report/$2_nikto.txt
+# echo -e "[+] nikto on $2"
+# nikto -h $2 -C all -ask no -evasion A | tee report/$2_nikto.txt
 
 ## uniscan
 #echo -e "[+] uniscan on $2"
 #uniscan -u $2 -qweds | tee report/$2_uniscan.txt
+
+# Supergobuster: gobuster + dirb
+./supergobuster.sh $2 | tee report/$2_supergobust.txt
+

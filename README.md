@@ -21,7 +21,8 @@ Usage: waes.sh -u {url}
 
 ### Method
 
-WAES runs whatweb, nmap with http-enum and vulners.nse, nikto, uniscan and gobuster against target while dumping results files.
+WAES runs whatweb, nmap std scripts, http-enum, vulners.nse, nikto, uniscan
+and gobuster against target while dumping results files in report/ folder.
 
 
 ### Coming later
