@@ -102,8 +102,8 @@ echo -e "[+] Looking up "$2" with whatweb"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
 echo -e "[+] OSIRA on:" $2
-OSIRA/osira.sh -u $2| tee ${REPORTDIR}/$2_osira.txt
-mv OSIRA/*.txt ${REPORTDIR}/
+OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
+mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
 echo -e "[+] nmap with standard scripts (-sC) on $2"
