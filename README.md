@@ -1,4 +1,4 @@
-**Note:** WAES requires vulners.nse : https://github.com/vulnersCom/nmap-vulners
+**Note:** Make sure directories are correct in supergobuster.sh
 
 ## WAES
 Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
@@ -21,9 +21,9 @@ Usage: waes.sh -u {url}
 
 ### Method
 
-WAES runs whatweb, nmap with http-enum and vulners.nse, nikto and uniscan against target while dumping results files.
+WAES runs whatweb, nmap with http-enum and vulners.nse, nikto, uniscan and gobuster against target while dumping results files.
 
 
 ### Coming later
 
-Gobuster and others will be added soon.
+

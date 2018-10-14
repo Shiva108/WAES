@@ -9,7 +9,7 @@
 #===============================================================================
 
 
-VERSION="0.0.1a"
+VERSION="0.0.2b"
 # Where to find vulners.nse :
 VULNERSDIR="/home/e"
 
@@ -71,15 +71,15 @@ else
 fi
 
 #Check for vulners.nse
-locate vulners>/dev/null
-if [ $? -eq 0 ]
-        then
-                echo ""
-else
-                echo ""
-       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap script vulners.nse, install and try again"
-        exit 1
-fi
+#locate vulners>/dev/null
+#if [ $? -eq 0 ]
+#        then
+#                echo ""
+#else
+#                echo ""
+#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap script vulners.nse, install and try again"
+#        exit 1
+#fi
 
 #Check for nikto
 which nikto>/dev/null
@@ -115,7 +115,7 @@ fi
 echo -e "Target: is $2 "
 
 # Whatweb
-echo -e "[+] Looking up "$2" with whatweb"
+echo -e "[+] Looking p "$2" with whatweb"
 whatweb -a3 $2 | tee $2_whatweb.txt
 
 # nmap
@@ -131,5 +131,3 @@ nikto -h $2 -C all | tee $2_nikto.txt
 # uniscan
 echo -e "[+] uniscan on $2"
 uniscan -u $2 -qweds | tee $2_uniscan.txt
-
-
