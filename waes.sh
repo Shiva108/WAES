@@ -31,14 +31,14 @@ echo "Usage: ${0##*/} -u {url}"
 echo "       ${0##*/} -h"
 echo ""
 echo "       -h shows this help"
-echo "       -u url to test"
+echo "       -u url to test without http or https e.g. testsite.com"
 echo ""
 }
 
 : ${1?"No arguments supplied - run waes -h for help or cat README.md"}
 
 
-## Check input parameters
+# Deprecated! - Check input parameters
 #if [ $ -eq 0 ]
 #  then
 #    usage
@@ -86,6 +86,9 @@ fi
 #        exit 1
 #fi
 
+# Removing HTTP and HTTPS
+# $2=echo $2 | rev | cut -d '/' -f 1 | rev
+
 #Check for nikto
 which nikto>/dev/null
 if [ $? -eq 0 ]
@@ -121,20 +124,20 @@ echo -e "Target: is $2 "
 
 # Whatweb
 echo -e "[+] Looking p "$2" with whatweb"
-whatweb -a3 $2 | tee $2_whatweb.txt
+whatweb -a3 $2 | tee report/$2_whatweb.txt
 
 # nmap
-echo -e "[+] nmap with standard scripts (-sC) on $2"
-nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
-echo -e "[+] nmap with http-enum on $2"
-nmap -sSV -Pn -O -vv --script http-enum $2 -oA report/$2_nmap_http-enum
-echo -e "[+] nmap with vulners on $2"
-nmap -sSV -Pn -A -vv --script vulners.nse $2 -oA $2_nmap_vulners
+#echo -e "[+] nmap with standard scripts (-sC) on $2"
+#nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
+#echo -e "[+] nmap with http-enum on $2"
+#nmap -sSV -Pn -O -vv --script http-enum $2 -oA report/$2_nmap_http-enum
+#echo -e "[+] nmap with vulners on $2"
+#nmap -sSV -Pn -A -vv --script vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
 echo -e "[+] nikto on $2"
-nikto -h $2 -C all | tee $2_nikto.txt
+nikto -h $2 -C all -ask no -evasion A | tee report/$2_nikto.txt
 
-# uniscan
-echo -e "[+] uniscan on $2"
-uniscan -u $2 -qweds | tee $2_uniscan.txt
+## uniscan
+#echo -e "[+] uniscan on $2"
+#uniscan -u $2 -qweds | tee report/$2_uniscan.txt
