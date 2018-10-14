@@ -12,7 +12,8 @@
 
 VERSION="0.0.2b"
 # Where to find vulners.nse :
-VULNERSDIR="/home/e"
+VULNERSDIR="nmap-vulners"
+SECLISTDIR="SecLists"
 
 echo ""
 echo -e "\e[00;32m#############################################################\e[00m"
@@ -34,13 +35,16 @@ echo "       -u url to test"
 echo ""
 }
 
-# Check input parameters
-if [ $ -eq 0 ]
-  then
-    usage
-    echo "No arguments supplied"
-    exit 1
-fi
+: ${1?"No arguments supplied - run waes -h for help or cat README.md"}
+
+
+## Check input parameters
+#if [ $ -eq 0 ]
+#  then
+#    usage
+#    echo "No arguments supplied"
+#    exit 1
+#fi
 
 if [ $1 == "-h" ]
   then
@@ -123,9 +127,9 @@ whatweb -a3 $2 | tee $2_whatweb.txt
 echo -e "[+] nmap with standard scripts (-sC) on $2"
 nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
 echo -e "[+] nmap with http-enum on $2"
-nmap -sSV -Pn -O --script http-enum $2 -oA report/$2_nmap_http-enum
+nmap -sSV -Pn -O -vv --script http-enum $2 -oA report/$2_nmap_http-enum
 echo -e "[+] nmap with vulners on $2"
-nmap -sSV -Pn -A --script vulners.nse $2 -oA $2_nmap_vulners
+nmap -sSV -Pn -A -vv --script vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
 echo -e "[+] nikto on $2"
