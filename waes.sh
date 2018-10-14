@@ -10,13 +10,14 @@
 #===============================================================================
 
 
+# vars
 VERSION="0.0.3b"
-# Where to find vulners.nse :
-VULNERSDIR="nmap-vulners"
-SECLISTDIR="SecLists"
-REPORTDIR="report" # report directory
+VULNERSDIR="nmap-vulners" # Where to find vulners.nse
+REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
+# SECLISTDIR="SecLists"
 
+#banner / help message
 echo ""
 echo -e "\e[00;32m#############################################################\e[00m"
 echo ""
@@ -98,32 +99,34 @@ fi
 echo -e "Target: $2 "
 
 # Whatweb
-echo -e "[+] Looking up "$2" with whatweb"
+echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
-echo -e "[+] OSIRA on:" $2
+echo -e "\e[00;32m [+] OSIRA on:" $2 "\e[00m"
 OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
 mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
-echo -e "[+] nmap with standard scripts (-sC) on $2"
-nmap -sSCV -Pn -T4 -vv $2 -oA ${REPORTDIR}/$2_nmap_sSCV
-echo -e "[+] nmap with http-enum on $2"
-nmap -sSV -Pn -O -T4 -vv --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
-echo -e "[+] nmap with various HTTP vuln nse scripts on $2"
-nmap -sSV -Pn -T4 -vv --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
-echo -e "[+] nmap with vulners on $2"
-nmap -sSV -Pn -A -T4 -vv --script ${VULNERSDIR}/vulners.nse $2 -oA ${REPORTDIR}/$2_nmap_vulners
+echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
+nmap -sSCV -Pn -T4 $2 -oA ${REPORTDIR}/$2_nmap_sSCV
+echo -e "\e[00;32m [+] nmap with http-enum on $2" "\e[00m"
+nmap -sSV -Pn -O -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
+echo -e "\e[00;32m [+] nmap with various HTTP vuln nse scripts on $2" "\e[00m"
+nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
+echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
+echo ${VULNERSDIR}"/vulners.nse"
+nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
-echo -e "[+] nikto on $2"
+echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
 nikto -h $2 -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
 
 # uniscan
-echo -e "[+] uniscan on $2"
+echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
 uniscan -u $2 -qweds | tee $REPORTDIR/$2_uniscan.txt
 
 # Supergobuster: gobuster + dirb
+echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
 ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
 echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
