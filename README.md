@@ -15,16 +15,26 @@ Usage: waes.sh -u {url}
        waes.sh -h
 
        -h shows this help
-       -u url to test
+       -u url to test without http or https e.g. google.com
 
 
 
 ### Method
 
-WAES runs whatweb, nmap std scripts, http-enum, vulners.nse, nikto, uniscan
-and gobuster against target while dumping results files in report/ folder.
+WAES runs
++ whatweb
++ nmap
+  - standard scripts (-sC)
+  - http-enum
+  - vulners.nse
++ nikto
++ uniscan
++ super gobuster
+  - gobuster with multiple lists
+  - dirb with multiple lists
 
 
-### Coming later
+against target while dumping results files in report/ folder.
+
 
 

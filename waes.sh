@@ -131,8 +131,8 @@ whatweb -a3 $2 | tee report/$2_whatweb.txt
 #nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
 #echo -e "[+] nmap with http-enum on $2"
 #nmap -sSV -Pn -O -vv --script http-enum $2 -oA report/$2_nmap_http-enum
-#echo -e "[+] nmap with vulners on $2"
-#nmap -sSV -Pn -A -vv --script vulners.nse $2 -oA $2_nmap_vulners
+echo -e "[+] nmap with vulners on $2"
+nmap -sSV -Pn -A -vv --script $VULNERSDIR/vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
 # echo -e "[+] nikto on $2"
@@ -143,5 +143,5 @@ whatweb -a3 $2 | tee report/$2_whatweb.txt
 #uniscan -u $2 -qweds | tee report/$2_uniscan.txt
 
 # Supergobuster: gobuster + dirb
-./supergobuster.sh $2 | tee report/$2_supergobust.txt
+# ./supergobuster.sh $2 | tee report/$2_supergobust.txt
 
