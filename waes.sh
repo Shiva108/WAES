@@ -10,11 +10,12 @@
 #===============================================================================
 
 
-VERSION="0.0.2b"
+VERSION="0.0.3b"
 # Where to find vulners.nse :
 VULNERSDIR="nmap-vulners"
 SECLISTDIR="SecLists"
 REPORTDIR="report" # report directory
+TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
 
 echo ""
 echo -e "\e[00;32m#############################################################\e[00m"
