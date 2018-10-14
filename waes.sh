@@ -106,6 +106,8 @@ echo -e "[+] nmap with standard scripts (-sC) on $2"
 nmap -sSCV -Pn -T4 -vv $2 -oA ${REPORTDIR}/$2_nmap_sSCV
 echo -e "[+] nmap with http-enum on $2"
 nmap -sSV -Pn -O -T4 -vv --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
+echo -e "[+] nmap with various HTTP vuln nse scripts on $2"
+nmap -sSV -Pn -A -T4 -vv --script --script http-vuln*.nse $2 -oA ${REPORTDIR}/$2_nmap_http-va
 echo -e "[+] nmap with vulners on $2"
 nmap -sSV -Pn -A -T4 -vv --script ${VULNERSDIR}/vulners.nse $2 -oA ${REPORTDIR}/$2_nmap_vulners
 
@@ -120,4 +122,4 @@ nmap -sSV -Pn -A -T4 -vv --script ${VULNERSDIR}/vulners.nse $2 -oA ${REPORTDIR}/
 # Supergobuster: gobuster + dirb
 # ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
-echo "WAES is done. Find results in:" ${REPORTDIR}
+echo "[+] WAES is done. Find results in:" ${REPORTDIR}

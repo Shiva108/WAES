@@ -23,6 +23,7 @@ Usage: waes.sh -u {url}
 
 WAES runs
 + whatweb
++ OSIRA (same author)
 + nmap
   - standard scripts (-sC)
   - http-enum
