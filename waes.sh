@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# 2018 by Shiva @ CPH:SEC & Cyberium
-# Creds to Common Exploits, Supra, Offensive & lisandrogallo
+# 2018 by Shiva @ CPH:SEC
 
-# WAE&S requires vulners.nse :
-# https://github.com/vulnersCom/nmap-vulners
+# WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
+# WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
+# WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
+
 
 # Script begins
 #===============================================================================
@@ -34,7 +35,7 @@ echo ""
 }
 
 # Check input parameters
-if [ $# -eq 0 ]
+if [ $ -eq 0 ]
   then
     usage
     echo "No arguments supplied"
@@ -119,10 +120,12 @@ echo -e "[+] Looking p "$2" with whatweb"
 whatweb -a3 $2 | tee $2_whatweb.txt
 
 # nmap
+echo -e "[+] nmap with standard scripts (-sC) on $2"
+nmap -sSCV -Pn -vv $2 -oA report/$2_nmap_sSCV
 echo -e "[+] nmap with http-enum on $2"
-nmap -sSV -Pn -O --script http-enum $2 -oA $2_nmap_http-enum
+nmap -sSV -Pn -O --script http-enum $2 -oA report/$2_nmap_http-enum
 echo -e "[+] nmap with vulners on $2"
-nmap -sSV -Pn -A --script $VULNERSDIR/vulners.nse $2 -oA $2_nmap_vulners
+nmap -sSV -Pn -A --script vulners.nse $2 -oA $2_nmap_vulners
 
 # nikto
 echo -e "[+] nikto on $2"
