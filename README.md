@@ -40,7 +40,8 @@ WAES runs ..
 
 
 ### To Do
-Simplify tools check.
++ Simplify tools check
++ Adding FD tools: https://github.com/chrispetrou/FDsploit
 
 
 
