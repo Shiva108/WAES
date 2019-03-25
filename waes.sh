@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2018 by Shiva @ CPH:SEC
+# 2018-2019 by Shiva @ CPH:SEC
 
 # WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
@@ -11,7 +11,7 @@
 
 
 # vars
-VERSION="0.0.3b"
+VERSION="0.0.3c"
 VULNERSDIR="nmap-vulners" # Where to find vulners.nse
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
@@ -42,7 +42,7 @@ echo ""
 : ${1?"No arguments supplied - run waes -h for help or cat README.md"}
 
 
-if [ $1 == "-h" ]
+if [[ $1 == "-h" ]]
   then
     usage
     exit 1
@@ -56,7 +56,7 @@ fi
 
 # Check for nmap
 which nmap>/dev/null
-if [ $? -eq 0 ]
+if [[ $? -eq 0 ]]
         then
                 echo ""
 else
@@ -67,7 +67,7 @@ fi
 
 #Check for nikto
 which nikto>/dev/null
-if [ $? -eq 0 ]
+if [[ $? -eq 0 ]]
         then
                 echo ""
 else
@@ -78,7 +78,7 @@ fi
 
 #Check for uniscan
 which uniscan>/dev/null
-if [ $? -eq 0 ]
+if [[ $? -eq 0 ]]
         then
                 echo ""
 else
@@ -102,20 +102,20 @@ echo -e "Target: $2 "
 echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
-echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
-OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
-mv $2.txt ${REPORTDIR}/$2_osira.txt
+# echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
+# OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
+# mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
 echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
 nmap -sSCV -Pn -T4 $2 -oA ${REPORTDIR}/$2_nmap_sSCV
 echo -e "\e[00;32m [+] nmap with http-enum against $2" "\e[00m"
 nmap -sSV -Pn -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
-echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
-echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
-echo ${VULNERSDIR}"/vulners.nse"
-nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+# echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
+# nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
+# echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
+#echo ${VULNERSDIR}"/vulners.nse"
+#nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
 echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
