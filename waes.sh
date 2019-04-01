@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # 2018-2019 by Shiva @ CPH:SEC
 
-# WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
 # WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
 
@@ -15,7 +14,7 @@ VERSION="0.0.3c"
 VULNERSDIR="nmap-vulners" # Where to find vulners.nse
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
-# SECLISTDIR="SecLists"
+SECLISTDIR="SecLists"
 
 #banner / help message
 echo ""
@@ -37,6 +36,8 @@ echo "       -h shows this help"
 echo "       -u url to test without http or https e.g. testsite.com"
 echo ""
 }
+
+if [[ `id -u` -ne 0 ]] ; then echo "Please run as root" ; exit 1 ; fi
 
 # Checks for input parameters
 : ${1?"No arguments supplied - run waes -h for help or cat README.md"}
