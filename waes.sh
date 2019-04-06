@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 2018-2019 by Shiva @ CPH:SEC
 
+# Todo: Cleanup
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
 # WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
 
@@ -10,11 +11,11 @@
 
 
 # vars
-VERSION="0.0.3c"
+VERSION="0.0.31d"
 VULNERSDIR="nmap-vulners" # Where to find vulners.nse
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
-SECLISTDIR="SecLists"
+SECLISTDIR="SecLists" # Todo: Use var and pass to next script
 
 #banner / help message
 echo ""
@@ -55,6 +56,7 @@ if [[ "$1" != "-u" && "$1" != "-h" ]]; then
    exit 1
 fi
 
+# Todo: Use 1 loop for all tools
 # Check for nmap
 which nmap>/dev/null
 if [[ $? -eq 0 ]]
@@ -100,9 +102,10 @@ fi
 echo -e "Target: $2 "
 
 # Whatweb
-echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
-whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
+# echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
+# whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
+# OSIRA
 # echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
 # OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
 # mv $2.txt ${REPORTDIR}/$2_osira.txt
@@ -111,11 +114,13 @@ whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
 nmap -sSCV -Pn -T4 $2 -oA ${REPORTDIR}/$2_nmap_sSCV
 echo -e "\e[00;32m [+] nmap with http-enum against $2" "\e[00m"
+# Todo: Cleanup?
 nmap -sSV -Pn -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
 # echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
 # nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
+# Todo: Change from vulners to new script
 # echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
-#echo ${VULNERSDIR}"/vulners.nse"
+# echo ${VULNERSDIR}"/vulners.nse"
 #nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
@@ -131,3 +136,6 @@ echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
 ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
 echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
+
+# Todo: Add FD tools: https://github.com/chrispetrou/FDsploit
+# Todo: Add from rapidscan
