@@ -1,6 +1,15 @@
-Run sudo ./install.sh after cloning to drive.
+## To install:
 
-## WAES
+$> git clone https://github.com/Shiva108/WAES.git
+$> sudo ./install.sh
+
+Make sure directories are set correctly in supergobuster.sh.
+Should be automatic with Kali & Parrot Linux.
+Standard directories for lists    : SecLists/Discovery/Web-Content & SecLists/Discovery/Web-Content/CMS
+Kali / Parrot directory list      : /usr/share/wordlists/dirbuster/
+
+
+## To run WAES
 Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
 
 ##############################################################################
@@ -19,7 +28,7 @@ Usage: waes.sh -u {url}
 
 
 
-### Method
+### Enumeration process / method
 
 WAES runs ..
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Standard directories for lists: SecLists/Discovery/Web-Content & SecLists/Discovery/Web-Content/CMS
-# Kali / Parrot directory list:  /usr/share/wordlists/dirbuster/
+# Standard directories for lists    : SecLists/Discovery/Web-Content & SecLists/Discovery/Web-Content/CMS
+# Kali / Parrot directory list      : /usr/share/wordlists/dirbuster/
 
 set -eu
 

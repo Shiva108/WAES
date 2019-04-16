@@ -4,6 +4,7 @@
 # Todo: Cleanup
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
 # WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
+# WAES Uses vulscan             : https://github.com/scipag/vulscan
 
 
 # Script begins
@@ -11,8 +12,8 @@
 
 
 # vars
-VERSION="0.0.31d"
-VULNERSDIR="nmap-vulners" # Where to find vulners.nse
+VERSION="0.0.31 alpha"
+VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
 SECLISTDIR="SecLists" # Todo: Use var and pass to next script
@@ -57,38 +58,55 @@ if [[ "$1" != "-u" && "$1" != "-h" ]]; then
 fi
 
 # Todo: Use 1 loop for all tools
-# Check for nmap
-which nmap>/dev/null
-if [[ $? -eq 0 ]]
-        then
-                echo ""
-else
-                echo ""
-       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap program, install and try again"
-        exit 1
-fi
+# Tools check
+for i in ${TOOLS[*]}; do
+echo ${TOOLS[i]}
+    which {TOOLS[i]}>/dev/null
+#        if [[ $? -eq 0 ]]
+#                then
+#                        echo ""
+#        else
+#                        echo ""
+#                    echo -e "\e[01;31m[!]\e[00m Unable to find the required xx program, install and try again"
+#                exit 1
+#        fi ;
+done
 
-#Check for nikto
-which nikto>/dev/null
-if [[ $? -eq 0 ]]
-        then
-                echo ""
-else
-                echo ""
-       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nikto program, install and try again"
-        exit 1
-fi
 
-#Check for uniscan
-which uniscan>/dev/null
-if [[ $? -eq 0 ]]
-        then
-                echo ""
-else
-                echo ""
-       		echo -e "\e[01;31m[!]\e[00m Unable to find the required uniscan program, install and try again"
-        exit 1
-fi
+
+# Todo: Deprecated
+## Check for nmap
+#which nmap>/dev/null
+#if [[ $? -eq 0 ]]
+#        then
+#                echo ""
+#else
+#                echo ""
+#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap program, install and try again"
+#        exit 1
+#fi
+#
+##Check for nikto
+#which nikto>/dev/null
+#if [[ $? -eq 0 ]]
+#        then
+#                echo ""
+#else
+#                echo ""
+#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nikto program, install and try again"
+#        exit 1
+#fi
+#
+##Check for uniscan
+#which uniscan>/dev/null
+#if [[ $? -eq 0 ]]
+#        then
+#                echo ""
+#else
+#                echo ""
+#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required uniscan program, install and try again"
+#        exit 1
+#fi
 
 # Check if root
 if [[ $EUID -ne 0 ]]; then
@@ -98,7 +116,7 @@ if [[ $EUID -ne 0 ]]; then
         exit 1
 fi
 
-#
+
 echo -e "Target: $2 "
 
 # Whatweb
