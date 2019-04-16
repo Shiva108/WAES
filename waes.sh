@@ -59,23 +59,17 @@ if [[ "$1" != "-u" && "$1" != "-h" ]]; then
    exit 1
 fi
 
-# Todo: Use 1 loop for all tools
-# Tools check
-#while [[ "x${TOOLS[count]}" != "x" ]]
-#do
-#   count=$(( $count + 1 ))
-#   # echo ${count}
-#   echo ${TOOLS[count]}
-#   command -v {TOOLS[count]} >/dev/null 1>&1 || { echo "WAES requires " ${TOOLS[count]} " but it's not installed.  Aborting." >&2; exit 1; }
-#            if [[ $? -eq 0 ]]
-#                then
-#                        echo ""
-#        else
-#                        echo ""
-#                    echo -e "\e[01;31m[!]\e[00m Unable to find the required " ${TOOLS[count]} " program, install and try again"
-#                exit 1
-#        fi ;
-# done
+while [[ "x${TOOLS[count]}" != "x" ]]
+do
+   count=$(( $count + 1 ))
+   # echo ${count} # For debug only
+   # echo ${TOOLS[count]} # For debug only
+   if ! hash ${TOOLS[count]} /dev/null 2>&1
+    then
+        echo -e "\e[01;31m[!]\e[00m ${TOOLS[count]} was not found in PATH"
+        echo "Run sudo ./install.sh to install tools"
+    fi
+done
 
 
 # Check if root
@@ -93,7 +87,7 @@ echo -e "Target: $2 "
 echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
 whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
-## OSIRA
+## OSIRA - For subdomain enum
 #echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
 #OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
 #mv $2.txt ${REPORTDIR}/$2_osira.txt
