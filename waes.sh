@@ -10,6 +10,7 @@
 # Script begins
 #===============================================================================
 
+# set -x # Starts debugging
 
 # vars
 VERSION="0.0.31 alpha"
@@ -17,6 +18,7 @@ VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
 SECLISTDIR="SecLists" # Todo: Use var and pass to next script
+count=-1 # For tools loop
 
 #banner / help message
 echo ""
@@ -59,54 +61,22 @@ fi
 
 # Todo: Use 1 loop for all tools
 # Tools check
-for i in ${TOOLS[*]}; do
-echo ${TOOLS[i]}
-    which {TOOLS[i]}>/dev/null
-#        if [[ $? -eq 0 ]]
+#while [[ "x${TOOLS[count]}" != "x" ]]
+#do
+#   count=$(( $count + 1 ))
+#   # echo ${count}
+#   echo ${TOOLS[count]}
+#   command -v {TOOLS[count]} >/dev/null 1>&1 || { echo "WAES requires " ${TOOLS[count]} " but it's not installed.  Aborting." >&2; exit 1; }
+#            if [[ $? -eq 0 ]]
 #                then
 #                        echo ""
 #        else
 #                        echo ""
-#                    echo -e "\e[01;31m[!]\e[00m Unable to find the required xx program, install and try again"
+#                    echo -e "\e[01;31m[!]\e[00m Unable to find the required " ${TOOLS[count]} " program, install and try again"
 #                exit 1
 #        fi ;
-done
+# done
 
-
-
-# Todo: Deprecated
-## Check for nmap
-#which nmap>/dev/null
-#if [[ $? -eq 0 ]]
-#        then
-#                echo ""
-#else
-#                echo ""
-#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nmap program, install and try again"
-#        exit 1
-#fi
-#
-##Check for nikto
-#which nikto>/dev/null
-#if [[ $? -eq 0 ]]
-#        then
-#                echo ""
-#else
-#                echo ""
-#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required nikto program, install and try again"
-#        exit 1
-#fi
-#
-##Check for uniscan
-#which uniscan>/dev/null
-#if [[ $? -eq 0 ]]
-#        then
-#                echo ""
-#else
-#                echo ""
-#       		echo -e "\e[01;31m[!]\e[00m Unable to find the required uniscan program, install and try again"
-#        exit 1
-#fi
 
 # Check if root
 if [[ $EUID -ne 0 ]]; then
@@ -120,20 +90,16 @@ fi
 echo -e "Target: $2 "
 
 # Whatweb
-# echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
-# whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
+echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
+whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
-# OSIRA
-# echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
-# OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
-# mv $2.txt ${REPORTDIR}/$2_osira.txt
+## OSIRA
+#echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
+#OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
+#mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
-echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
-nmap -sSCV -Pn -T4 $2 -oA ${REPORTDIR}/$2_nmap_sSCV
-echo -e "\e[00;32m [+] nmap with http-enum against $2" "\e[00m"
-# Todo: Cleanup?
-nmap -sSV -Pn -T4 --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
+#
 # echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
 # nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
 # Todo: Change from vulners to new script
@@ -157,3 +123,5 @@ echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
 
 # Todo: Add FD tools: https://github.com/chrispetrou/FDsploit
 # Todo: Add from rapidscan
+
+# set +x # Ends debugging
