@@ -34,6 +34,7 @@ echo "       ${0##*/} -h"
 echo ""
 echo "       -h shows this help"
 echo "       -u url to test without http or https e.g. testsite.com" # Todo: Clarify
+echo "       -p port nummer (default=80)" # Todo: Implement
 echo ""
 }
 
@@ -87,6 +88,10 @@ nmap -sSV -Pn -O -T4 --version-all -p $PORT --script ${VULNERSDIR}/vulscan.nse $
 # nikto
 echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
 nikto -h $2 -port $PORT -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
+
+# xsser
+# echo -e "\e[00;32m [+] xsser on $2" "\e[00m"
+# Todo: Implement Xsser (requires url not ip)
 
 # uniscan
 echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"

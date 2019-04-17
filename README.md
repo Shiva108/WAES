@@ -1,4 +1,5 @@
-![](logo_transparent.png)
+
+![GitHub Logo](logo_transparent.png)
 
 ## To install:
 
