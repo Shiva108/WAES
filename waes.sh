@@ -7,14 +7,13 @@
 # set -x # Starts debugging
 
 # vars
-VERSION="0.0.31 alpha"
+VERSION="0.0.32 alpha"
 VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
-# Todo: Implement HTTPNSE list
 HTTPNSE=( "http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute" )
-SECLISTDIR="SecLists" # Todo: Use var and pass to next script
-PORT=( 80 ) # Todo: Implement PORT var
+# SECLISTDIR="SecLists" # Todo: Use var and pass to next script
+PORT=( 80 ) # Setting std port Todo: Implement PORT var
 count=-1 # For tools loop
 
 #banner / help message
@@ -34,7 +33,7 @@ echo "Usage: ${0##*/} -u {url}"
 echo "       ${0##*/} -h"
 echo ""
 echo "       -h shows this help"
-echo "       -u url to test without http or https e.g. testsite.com"
+echo "       -u url to test without http or https e.g. testsite.com" # Todo: Clarify
 echo ""
 }
 
@@ -67,7 +66,7 @@ do
 done
 
 
-echo -e "Target: $2 "
+echo -e "Target: $2 port: $PORT"
 
 # Whatweb
 #echo -e "\e[00;32m [+] Looking up "$2" with whatweb - only works for online targets" "\e[00m"
@@ -80,23 +79,22 @@ echo -e "Target: $2 "
 
 # nmap
 echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-nmap -sSV -Pn -T4 -v -p 80 --script $HTTPNSE $2 -oA ${REPORTDIR}/$2_nmap_http-va
-# Todo: Change from vulners to new script
+nmap -sSV -Pn -T4 -v -p $PORT --script $HTTPNSE $2 -oA ${REPORTDIR}/$2_nmap_http-va
 echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
 echo ${VULNERSDIR}
-nmap -sSV -Pn -O -T4 --version-all -p 80 --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+nmap -sSV -Pn -O -T4 --version-all -p $PORT --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
 echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
-nikto -h $2 -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
+nikto -h $2 -port $PORT -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
 
 # uniscan
 echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
-uniscan -u $2 -qweds | tee $REPORTDIR/$2_uniscan.txt
+uniscan -u $2":"$PORT -qweds | tee $REPORTDIR/$2_uniscan.txt
 
 # Supergobuster: gobuster + dirb
 echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
-./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
+./supergobuster.sh $2":"$PORT | tee $REPORTDIR/$2_supergobust.txt
 
 echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
 
