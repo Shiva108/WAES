@@ -18,6 +18,7 @@ VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
 SECLISTDIR="SecLists" # Todo: Use var and pass to next script
+PORT=( 80 ) # Todo: Implement PORT var
 count=-1 # For tools loop
 
 #banner / help message
@@ -41,7 +42,7 @@ echo "       -u url to test without http or https e.g. testsite.com"
 echo ""
 }
 
-if [[ `id -u` -ne 0 ]] ; then echo "Please run as root" ; exit 1 ; fi
+if [[ `id -u` -ne 0 ]] ; then echo -e "\e[01;31m[!]\e[00m This program must be run as root. Run again with 'sudo'" ; exit 1 ; fi
 
 # Checks for input parameters
 : ${1?"No arguments supplied - run waes -h for help or cat README.md"}
@@ -72,20 +73,11 @@ do
 done
 
 
-# Check if root
-if [[ $EUID -ne 0 ]]; then
-        echo ""
-        echo -e "\e[01;31m[!]\e[00m This program must be run as root. Run again with 'sudo'"
-        echo ""
-        exit 1
-fi
-
-
 echo -e "Target: $2 "
 
 # Whatweb
-echo -e "\e[00;32m [+] Looking up "$2" with whatweb" "\e[00m"
-whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
+#echo -e "\e[00;32m [+] Looking up "$2" with whatweb - only works for online targets" "\e[00m"
+#whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 
 ## OSIRA - For subdomain enum
 #echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
@@ -93,13 +85,12 @@ whatweb -a3 $2 | tee ${REPORTDIR}/$2_whatweb.txt
 #mv $2.txt ${REPORTDIR}/$2_osira.txt
 
 # nmap
-#
-# echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-# nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
+echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
+nmap -sSV -Pn -T4 -v -p 80 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
 # Todo: Change from vulners to new script
-# echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
-# echo ${VULNERSDIR}"/vulners.nse"
-#nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
+echo ${VULNERSDIR}
+nmap -sV -Pn -O -T4 -p 80 --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
 echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
@@ -115,7 +106,6 @@ echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
 
 echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
 
-# Todo: Add FD tools: https://github.com/chrispetrou/FDsploit
 # Todo: Add from rapidscan
 
 # set +x # Ends debugging

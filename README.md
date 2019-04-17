@@ -7,7 +7,7 @@
 
 Make sure directories are set correctly in supergobuster.sh.
 Should be automatic with Kali & Parrot Linux.
-Standard directories for lists    : SecLists/Discovery/Web-Content & SecLists/* * Discovery/Web-Content/CMS
+* Standard directories for lists    : SecLists/Discovery/Web-Content & SecLists/Discovery/Web-Content/CMS
 * Kali / Parrot directory list      : /usr/share/wordlists/dirbuster/
 
 
