@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 # 2018-2019 by Shiva @ CPH:SEC
 
-# Todo: Cleanup
-# WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
-# WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
-# WAES Uses vulscan             : https://github.com/scipag/vulscan
-
-
 # Script begins
 #===============================================================================
 
@@ -17,6 +11,8 @@ VERSION="0.0.31 alpha"
 VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" )
+# Todo: Implement HTTPNSE list
+HTTPNSE=( "http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute" )
 SECLISTDIR="SecLists" # Todo: Use var and pass to next script
 PORT=( 80 ) # Todo: Implement PORT var
 count=-1 # For tools loop
@@ -63,8 +59,6 @@ fi
 while [[ "x${TOOLS[count]}" != "x" ]]
 do
    count=$(( $count + 1 ))
-   # echo ${count} # For debug only
-   # echo ${TOOLS[count]} # For debug only
    if ! hash ${TOOLS[count]} /dev/null 2>&1
     then
         echo -e "\e[01;31m[!]\e[00m ${TOOLS[count]} was not found in PATH"
@@ -86,11 +80,11 @@ echo -e "Target: $2 "
 
 # nmap
 echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-nmap -sSV -Pn -T4 -v -p 80 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
+nmap -sSV -Pn -T4 -v -p 80 --script $HTTPNSE $2 -oA ${REPORTDIR}/$2_nmap_http-va
 # Todo: Change from vulners to new script
 echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
 echo ${VULNERSDIR}
-nmap -sV -Pn -O -T4 -p 80 --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+nmap -sSV -Pn -O -T4 --version-all -p 80 --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
 # nikto
 echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
