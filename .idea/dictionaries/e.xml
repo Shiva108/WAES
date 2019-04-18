@@ -3,6 +3,7 @@
     <words>
       <w>dirb</w>
       <w>gobuster</w>
+      <w>httpnse</w>
       <w>nikto</w>
       <w>nmap</w>
       <w>reportdir</w>
@@ -11,7 +12,9 @@
       <w>uniscan</w>
       <w>vulners</w>
       <w>vulnersdir</w>
+      <w>vulscan</w>
       <w>waes</w>
+      <w>wafw</w>
       <w>whatweb</w>
     </words>
   </dictionary>
