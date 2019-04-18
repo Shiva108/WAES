@@ -72,7 +72,7 @@ echo -e "Target: $2 port: $PORT"
 
 # Whatweb
 echo -e "\e[00;32m [+] Looking up "$2" with whatweb - only works for online targets" "\e[00m"
-whatweb -a3 $2":"$PORT | tee ${REPORTDIR}/$2_whatweb.txt
+whatweb -a 3 $2":"$PORT | tee ${REPORTDIR}/$2_whatweb.txt
 
 ## OSIRA - For subdomain enum
 echo -e "\e[00;32m [+] OSIRA against:" $2 " - looking for subdomains \e[00m"

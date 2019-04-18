@@ -37,13 +37,13 @@ Usage: waes.sh -u {url}
 
 WAES runs ..
 
-+ whatweb
-+ OSIRA (same author)
++ whatweb - aggressive mode
++ OSIRA (same author) - looks for subdomains
 + nmap
   - with scripts: http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute
   - vulscan (CVSS 5.0+)
-+ nikto
-+ uniscan
++ nikto - with evasion A and all CGI dirs
++ uniscan - all tests except stress test
 + super gobuster
   - gobuster with multiple lists
   - dirb with multiple lists
