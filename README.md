@@ -27,7 +27,9 @@ Usage: waes.sh -u {url}
        waes.sh -h
 
        -h shows this help
-       -u url to test without http or https e.g. google.com
+       -u IP to test eg. 10.10.10.123
+       -p port nummer (default=80)
+
 
 
 
@@ -38,9 +40,8 @@ WAES runs ..
 + whatweb
 + OSIRA (same author)
 + nmap
-  - standard scripts (-sC)
-  - http-enum
-  - vulners.nse
+  - with scripts: http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute
+  - vulscan (CVSS 5.0+)
 + nikto
 + uniscan
 + super gobuster
@@ -52,5 +53,4 @@ WAES runs ..
 
 
 ### To Do
-+ Simplify tools check
-+ Adding FD tools: https://github.com/chrispetrou/FDsploit
++ ...
