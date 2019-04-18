@@ -23,7 +23,7 @@ Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
 
 ##############################################################################
 
-Usage: waes.sh -u {url}
+Usage: waes.sh -u {IP}
        waes.sh -h
 
        -h shows this help

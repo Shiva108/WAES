@@ -7,7 +7,7 @@
 # set -x # Starts debugging
 
 # vars
-VERSION="0.0.32 alpha"
+VERSION="0.0.33 alpha"
 VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" "wafw00f" )
