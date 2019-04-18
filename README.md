@@ -1,5 +1,5 @@
 
-![GitHub Logo](logo_transparent.png)
+![GitHub Logo](banner.png)
 
 ## To install:
 
