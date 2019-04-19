@@ -30,8 +30,8 @@ Usage: waes.sh -u {IP}
        -u IP to test eg. 10.10.10.123
        -p port nummer (default=80)
 
-
-
+       Example: ./waes.sh -u 10.10.10.130 -p 8080
+       
 
 ### Enumeration Process / Method
 
