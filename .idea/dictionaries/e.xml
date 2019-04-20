@@ -2,6 +2,7 @@
   <dictionary name="e">
     <words>
       <w>dirb</w>
+      <w>fastscan</w>
       <w>gobuster</w>
       <w>httpnse</w>
       <w>nikto</w>

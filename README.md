@@ -51,14 +51,17 @@ WAES runs ..
 Step 0 - Passive scan - (disabled in the current version)
   + whatweb - aggressive mode
   + OSIRA (same author) - looks for subdomains
+
 Step 1 - Fast scan
   + wafw00 - firewall detection
   + nmap with http-enum
+
 Step 2 - Scan - in-depth
   + nmap - with NSE scripts: http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute
   + nmap with vulscan (CVSS 5.0+)
   + nikto - with evasion A and all CGI dirs
   + uniscan - all tests except stress test (qweds)
+
 Step 3 - Fuzzing
 + super gobuster
   - gobuster with multiple lists
