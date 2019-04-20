@@ -104,6 +104,9 @@ fastscan() {
     # wafw00f
     echo -e "\e[00;32m [+] Detecting firewall "$2":"$PORT" with wafw00f" "\e[00m"
     wafw00f -a -v $2":"$PORT | tee $REPORTDIR/$2_wafw00f.txt
+    # nmap http-enum
+    echo -e "\e[00;32m [+] nmap with HTTP-ENUM script against $2" "\e[00m"
+    nmap -sSV -Pn -T4 -p $PORT --script http-enum $2 -oA ${REPORTDIR}/$2_nmap_http-enum
 }
 
 scan() {

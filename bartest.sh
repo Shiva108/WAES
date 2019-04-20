@@ -8,13 +8,13 @@
 
 bar::start
 
-StuffToDo=("Stuff1" "Stuff2" "Stuff3")
+StuffToDo=("wafw00f" "http-enum" "http-nse-va" "vulscan" "nikto" "uniscan" "supergobuster" )
 
 TotalSteps=${#StuffToDo[@]}
 
 for Stuff in ${StuffToDo[@]}; do
   # Do stuff
-  echo "Invoking ${Stuff} to do some stuffs..."
+  echo "Invoking ${Stuff} for scanning..."
   StepsDone=$((${StepsDone:-0}+1))
   bar::status_changed $StepsDone $TotalSteps
   sleep 1
