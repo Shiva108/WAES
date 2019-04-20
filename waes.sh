@@ -7,12 +7,12 @@
 # set -x # Starts debugging
 
 # vars
-VERSION="0.0.33 alpha"
+VERSION="0.0.36 alpha"
 VULNERSDIR="vulscan" # Where to find vulscan
 REPORTDIR="report" # /report directory
 TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" "wafw00f" )
 HTTPNSE=( "http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute" )
-PORT=80 # Setting std port Todo: Implement PORT var
+PORT=80 # Setting std port
 COUNT=-1 # For tools loop
 
 #banner / help message
@@ -33,7 +33,7 @@ echo "       ${0##*/} -h"
 echo ""
 echo "       -h shows this help"
 echo "       -u IP to test eg. 10.10.10.123"
-echo "       -p port number (default=80)" # Todo: Implement
+echo "       -p port number (default=80)"
 echo ""
 echo "       Example: ./waes.sh -u 10.10.10.130 -p 8080"
 echo ""
@@ -52,7 +52,7 @@ if [[ `id -u` -ne 0 ]] ; then echo -e "\e[01;31m[!]\e[00m This program must be r
 #echo '$3 = ' $3
 #echo '$4 = ' $4
 
-
+# Parameters check
 if [[ $1 == "-h" ]]
   then
     usage
@@ -67,10 +67,10 @@ fi
 
 if [[ "$3" = "-p" && "$4" != "" ]]; then
         PORT="$4"
-        echo "Port is set to: " $PORT
+        # echo "Port is set to: " $PORT
 fi
 
-
+# Tools installed check
 while [[ "x${TOOLS[COUNT]}" != "x" ]]
 do
    COUNT=$(( $COUNT + 1 ))
@@ -86,42 +86,66 @@ echo -e "Target: $2 port: $PORT"
 
 # Todo: Implement progressbar (bartest.sh)
 
-## Whatweb
-#echo -e "\e[00;32m [+] Looking up "$2" with whatweb - only works for online targets" "\e[00m"
-#whatweb -a 3 $2":"$PORT | tee ${REPORTDIR}/$2_whatweb.txt
+passive() {
 
-### OSIRA - For subdomain enum Todo: Delete or fix
-## echo -e "\e[00;32m [+] OSIRA against:" $2 " - looking for subdomains \e[00m"
-## OSIRA/osira.sh -u $2":"$PORT | tee ${REPORTDIR}/$2_osira.txt
+    echo "Starting PASSIVE scans..."
+    # Whatweb
+    echo -e "\e[00;32m [+] Looking up "$2" with whatweb - only works for online targets" "\e[00m"
+    whatweb -a 3 $2":"$PORT | tee ${REPORTDIR}/$2_whatweb.txt
 
-# wafw00f
-echo -e "\e[00;32m [+] Detecting firewall "$2":"$PORT" with wafw00f" "\e[00m"
-wafw00f -a -v $2":"$PORT | tee $REPORTDIR/$2_wafw00f.txt
+    # OSIRA - For subdomain enum
+    echo -e "\e[00;32m [+] OSIRA against:" $2 " - looking for subdomains \e[00m"
+    OSIRA/osira.sh -u $2":"$PORT | tee ${REPORTDIR}/$2_osira.txt
+}
 
-# nmap
-echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-nmap -sSV -Pn -T4 -p $PORT --script $HTTPNSE $2 -oA ${REPORTDIR}/$2_nmap_http-va
-echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
-nmap -sSV -Pn -O -T4 --version-all -p $PORT --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+fastscan() {
 
-# nikto
-echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
-nikto -h $2 -port $PORT -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
+    echo "Step 1: Starting fast scan... "
+    # wafw00f
+    echo -e "\e[00;32m [+] Detecting firewall "$2":"$PORT" with wafw00f" "\e[00m"
+    wafw00f -a -v $2":"$PORT | tee $REPORTDIR/$2_wafw00f.txt
+}
 
-# xsser
-# echo -e "\e[00;32m [+] xsser on $2" "\e[00m"
-# Todo: Implement Xsser (requires url not ip)
+scan() {
 
-# uniscan
-echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
-uniscan -u $2":"$PORT -qweds | tee $REPORTDIR/$2_uniscan.txt
+    echo "Step 2: Starting more in-depth scan... "
+    # nmap
+    echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
+    nmap -sSV -Pn -T4 -p $PORT --script $HTTPNSE $2 -oA ${REPORTDIR}/$2_nmap_http-va
+    echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
+    nmap -sSV -Pn -O -T4 --version-all -p $PORT --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
 
-# Supergobuster: gobuster + dirb
-echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
-./supergobuster.sh "http://"$2":"$PORT | tee $REPORTDIR/$2_supergobust.txt
+    # nikto
+    echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
+    nikto -h $2 -port $PORT -C all -ask no -evasion A | tee $REPORTDIR/$2_nikto.txt
 
-echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
+    # uniscan
+    echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
+    uniscan -u $2":"$PORT -qweds | tee $REPORTDIR/$2_uniscan.txt
+}
 
-# Todo: Add from rapidscan
+fuzzing() {
+
+    echo "Step 3: Starting fuzzing... "
+    # xsser
+    # echo -e "\e[00;32m [+] xsser on $2" "\e[00m"
+    # Todo: Implement Xsser (requires url not ip)
+
+    # Supergobuster: gobuster + dirb
+    echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
+    ./supergobuster.sh "http://"$2":"$PORT | tee $REPORTDIR/$2_supergobust.txt
+}
+
+end() {
+    echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
+}
+
+# passive  $1 $2 $3 $4 # Uncomment to run, work online for online targets Todo: Add in next version
+fastscan $1 $2 $3 $4
+scan $1 $2 $3 $4
+fuzzing  $1 $2 $3 $4
+end $1 $2 $3 $4
+
+# Todo: Add from rapidscan / golismero and others
 
 # set +x # Ends debugging
