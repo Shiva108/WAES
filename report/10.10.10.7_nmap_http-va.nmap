@@ -1,0 +1,33 @@
+# Nmap 7.70 scan initiated Sat Jul 27 14:31:08 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.7_nmap_http-va 10.10.10.7
+Nmap scan report for 10.10.10.7
+Host is up (0.072s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.2.3
+|_http-date: Sat, 27 Jul 2019 12:25:15 GMT; -6m20s from local time.
+|_http-devframework: Couldn't determine the underlying framework or CMS. Try increasing 'httpspider.maxpagecount' value to spider more pages.
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+| http-enum: 
+|_  /icons/: Potentially interesting directory w/ listing on 'apache/2.2.3 (centos)'
+|_http-errors: Couldn't find any error pages.
+| http-grep: 
+|   (1) https://10.10.10.7:443/: 
+|     (1) ip: 
+|_      + 10.10.10.7
+| http-headers: 
+|   Date: Sat, 27 Jul 2019 12:25:15 GMT
+|   Server: Apache/2.2.3 (CentOS)
+|   Location: https://10.10.10.7/
+|   Content-Length: 278
+|   Connection: close
+|   Content-Type: text/html; charset=iso-8859-1
+|   
+|_  (Request type: GET)
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-title: Did not follow redirect to https://10.10.10.7/
+|_http-traceroute: ERROR: Script execution failed (use -d to debug)
+|_http-xssed: No previously reported XSS vuln.
+Service Info: Host: 127.0.0.1
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Sat Jul 27 14:37:42 2019 -- 1 IP address (1 host up) scanned in 393.71 seconds

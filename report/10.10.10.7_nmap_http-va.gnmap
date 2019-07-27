@@ -1,0 +1,4 @@
+# Nmap 7.70 scan initiated Sat Jul 27 14:31:08 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.7_nmap_http-va 10.10.10.7
+Host: 10.10.10.7 ()	Status: Up
+Host: 10.10.10.7 ()	Ports: 80/open/tcp//http//Apache httpd 2.2.3/
+# Nmap done at Sat Jul 27 14:37:42 2019 -- 1 IP address (1 host up) scanned in 393.71 seconds
