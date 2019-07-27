@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 # 2018-2019 by Shiva @ CPH:SEC
-<<<<<<< HEAD
 
 # WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
 # WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
-
-=======
->>>>>>> 56b17398b9ba8589c6a8aa43aee0262070e1629f
 
 # Script begins
 #===============================================================================
