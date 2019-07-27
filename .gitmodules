@@ -1,0 +1,6 @@
+[submodule "dirble"]
+	path = dirble
+	url = ../../nccgroup/dirble.git
+[submodule "pywhatcms"]
+	path = pywhatcms
+	url = ../../HA71/pywhatcms.git
