@@ -1,0 +1,15 @@
+# Nmap 7.70 scan initiated Mon Jul 29 21:51:46 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-enum -oA report/10.10.10.140_nmap_http-enum 10.10.10.140
+Nmap scan report for 10.10.10.140
+Host is up (0.074s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.18 ((Ubuntu))
+| http-enum: 
+|   /app/: Potentially interesting directory w/ listing on 'apache/2.4.18 (ubuntu)'
+|   /errors/: Potentially interesting directory w/ listing on 'apache/2.4.18 (ubuntu)'
+|   /includes/: Potentially interesting directory w/ listing on 'apache/2.4.18 (ubuntu)'
+|_  /lib/: Potentially interesting directory w/ listing on 'apache/2.4.18 (ubuntu)'
+|_http-server-header: Apache/2.4.18 (Ubuntu)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon Jul 29 21:52:19 2019 -- 1 IP address (1 host up) scanned in 32.67 seconds

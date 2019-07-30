@@ -1,0 +1,4 @@
+# Nmap 7.70 scan initiated Mon Jul 29 20:54:42 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-enum -oA report/10.10.10.147_nmap_http-enum 10.10.10.147
+Host: 10.10.10.147 ()	Status: Up
+Host: 10.10.10.147 ()	Ports: 80/open/tcp//http//Apache httpd 2.4.25 ((Debian))/
+# Nmap done at Mon Jul 29 20:55:13 2019 -- 1 IP address (1 host up) scanned in 31.04 seconds

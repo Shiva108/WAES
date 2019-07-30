@@ -155,7 +155,6 @@ end $1 $2 $3 $4
 
 # Todo: Add from rapidscan / golismero and others
 
-<<<<<<< HEAD
 #
 echo -e "Target: $2 "
 
@@ -191,6 +190,4 @@ echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
 ./supergobuster.sh $2 | tee $REPORTDIR/$2_supergobust.txt
 
 echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
-=======
 # set +x # Ends debugging
->>>>>>> 56b17398b9ba8589c6a8aa43aee0262070e1629f

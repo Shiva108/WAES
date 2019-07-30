@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.70 scan initiated Mon Jul 29 20:55:52 2019 as: nmap -sSV -Pn -O -T4 -&#45;version-all -p 80 -&#45;script vulscan/vulscan.nse -&#45;script-args mincvss=5-0 -oA report/10.10.10.147_nmap_vulners 10.10.10.147 -->
+<nmaprun scanner="nmap" args="nmap -sSV -Pn -O -T4 -&#45;version-all -p 80 -&#45;script vulscan/vulscan.nse -&#45;script-args mincvss=5-0 -oA report/10.10.10.147_nmap_vulners 10.10.10.147" start="1564426552" startstr="Mon Jul 29 20:55:52 2019" version="7.70" xmloutputversion="1.04">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="80"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1564426569" endtime="1564426580"><status state="up" reason="user-set" reason_ttl="0"/>
+<address addr="10.10.10.147" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" product="Apache httpd" version="2.4.25" extrainfo="(Debian)" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.4.25</cpe></service><script id="http-server-header" output="Apache/2.4.25 (Debian)"><elem>Apache/2.4.25 (Debian)</elem>
+</script><script id="vulscan" output="scip VulDB - http://www.scip.ch/en/?vuldb:&#xa;No findings&#xa;&#xa;MITRE CVE - http://cve.mitre.org:&#xa;No findings&#xa;&#xa;OSVDB - http://www.osvdb.org:&#xa;No findings&#xa;&#xa;SecurityFocus - http://www.securityfocus.com/bid/:&#xa;No findings&#xa;&#xa;SecurityTracker - http://www.securitytracker.com:&#xa;No findings&#xa;&#xa;IBM X-Force - http://xforce.iss.net:&#xa;No findings&#xa;&#xa;Exploit-DB - http://www.exploit-db.com:&#xa;No findings&#xa;&#xa;OpenVAS (Nessus) - http://www.openvas.org:&#xa;No findings&#xa;&#xa;"/></port>
+</ports>
+<os><portused state="open" proto="tcp" portid="80"/>
+<portused state="closed" proto="udp" portid="36939"/>
+<osmatch name="Linux 3.2 - 4.9" accuracy="95" line="65105">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="95"><cpe>cpe:/o:linux:linux_kernel:3</cpe></osclass>
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="4.X" accuracy="95"><cpe>cpe:/o:linux:linux_kernel:4</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.1" accuracy="94" line="62708">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.1</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.2" accuracy="94" line="64455">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.2</cpe></osclass>
+</osmatch>
+<osmatch name="AXIS 210A or 211 Network Camera (Linux 2.6.17)" accuracy="94" line="61606">
+<osclass type="webcam" vendor="Linux" osfamily="Linux" osgen="2.6.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:2.6.17</cpe></osclass>
+<osclass type="webcam" vendor="AXIS" osfamily="embedded" accuracy="94"><cpe>cpe:/h:axis:210a_network_camera</cpe><cpe>cpe:/h:axis:211_network_camera</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.12" accuracy="94" line="63436">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.12</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.13" accuracy="94" line="63553">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.13</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.16" accuracy="94" line="63944">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.16</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.18" accuracy="94" line="64238">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3.18</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 3.8 - 3.11" accuracy="94" line="66079">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="3.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:3</cpe></osclass>
+</osmatch>
+<osmatch name="Linux 4.4" accuracy="94" line="67510">
+<osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="4.X" accuracy="94"><cpe>cpe:/o:linux:linux_kernel:4.4</cpe></osclass>
+</osmatch>
+</os>
+<uptime seconds="35779" lastboot="Mon Jul 29 11:00:01 2019"/>
+<distance value="2"/>
+<tcpsequence index="259" difficulty="Good luck!" values="338C3027,80DD7C56,12CC3769,5C50B4C2,D9664C25,416A83E"/>
+<ipidsequence class="All zeros" values="0,0,0,0,0,0"/>
+<tcptssequence class="other" values="887A81,887A99,887AB3,887ACC,887AE4,887AFE"/>
+<times srtt="75024" rttvar="5573" to="100000"/>
+</host>
+<runstats><finished time="1564426580" timestr="Mon Jul 29 20:56:20 2019" elapsed="28.34" summary="Nmap done at Mon Jul 29 20:56:20 2019; 1 IP address (1 host up) scanned in 28.34 seconds" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

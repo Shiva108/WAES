@@ -1,0 +1,45 @@
+# Nmap 7.70 scan initiated Mon Jul 29 20:55:13 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.147_nmap_http-va 10.10.10.147
+Nmap scan report for 10.10.10.147
+Host is up (0.071s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.25 ((Debian))
+|_http-date: Mon, 29 Jul 2019 18:49:21 GMT; -6m17s from local time.
+|_http-devframework: Couldn't determine the underlying framework or CMS. Try increasing 'httpspider.maxpagecount' value to spider more pages.
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+| http-enum: 
+|_  /manual/: Potentially interesting folder
+| http-errors: 
+| Spidering limited to: maxpagecount=40; withinhost=10.10.10.147
+|   Found the following error pages: 
+|   
+|   Error Code: 404
+|_  	http://10.10.10.147:80/apache2;repeatmerged=0"
+| http-grep: 
+|   (1) http://10.10.10.147:80/apache2;repeatmerged=0": 
+|     (1) ip: 
+|       + 10.10.10.147
+|   (1) http://10.10.10.147:80/manual/pt-br/logs.html: 
+|     (1) ip: 
+|_      + 72.15.99.187
+| http-headers: 
+|   Date: Mon, 29 Jul 2019 18:49:20 GMT
+|   Server: Apache/2.4.25 (Debian)
+|   Last-Modified: Mon, 13 May 2019 13:21:46 GMT
+|   ETag: "2a23-588c4cc4e54b5"
+|   Accept-Ranges: bytes
+|   Content-Length: 10787
+|   Vary: Accept-Encoding
+|   Connection: close
+|   Content-Type: text/html
+|   
+|_  (Request type: HEAD)
+|_http-server-header: Apache/2.4.25 (Debian)
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-title: Apache2 Debian Default Page: It works
+| http-traceroute: 
+|_  Possible reverse proxy detected.
+|_http-xssed: No previously reported XSS vuln.
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon Jul 29 20:55:52 2019 -- 1 IP address (1 host up) scanned in 38.61 seconds

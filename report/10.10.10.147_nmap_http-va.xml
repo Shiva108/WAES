@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.70 scan initiated Mon Jul 29 20:55:13 2019 as: nmap -sSV -Pn -T4 -p 80 -&#45;script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.147_nmap_http-va 10.10.10.147 -->
+<nmaprun scanner="nmap" args="nmap -sSV -Pn -T4 -p 80 -&#45;script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.147_nmap_http-va 10.10.10.147" start="1564426513" startstr="Mon Jul 29 20:55:13 2019" version="7.70" xmloutputversion="1.04">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="80"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1564426530" endtime="1564426552"><status state="up" reason="user-set" reason_ttl="0"/>
+<address addr="10.10.10.147" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" product="Apache httpd" version="2.4.25" extrainfo="(Debian)" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.4.25</cpe></service><script id="http-date" output="Mon, 29 Jul 2019 18:49:21 GMT; -6m17s from local time."><elem key="date">2019-07-29T18:49:21+00:00</elem>
+<elem key="delta">-377.0</elem>
+</script><script id="http-devframework" output="Couldn&apos;t determine the underlying framework or CMS. Try increasing &apos;httpspider.maxpagecount&apos; value to spider more pages."/><script id="http-dombased-xss" output="Couldn&apos;t find any DOM based XSS."/><script id="http-enum" output="&#xa;  /manual/: Potentially interesting folder&#xa;"/><script id="http-errors" output="&#xa;Spidering limited to: maxpagecount=40; withinhost=10.10.10.147&#xa;  Found the following error pages: &#xa;  &#xa;  Error Code: 404&#xa;  &#x9;http://10.10.10.147:80/apache2;repeatmerged=0&quot;&#xa;"/><script id="http-grep" output="&#xa;  (1) http://10.10.10.147:80/apache2;repeatmerged=0&quot;: &#xa;    (1) ip: &#xa;      + 10.10.10.147&#xa;  (1) http://10.10.10.147:80/manual/pt-br/logs.html: &#xa;    (1) ip: &#xa;      + 72.15.99.187"><table key="(1) http://10.10.10.147:80/apache2;repeatmerged=0&quot;">
+<table key="(1) ip">
+<elem>+ 10.10.10.147</elem>
+</table>
+</table>
+<table key="(1) http://10.10.10.147:80/manual/pt-br/logs.html">
+<table key="(1) ip">
+<elem>+ 72.15.99.187</elem>
+</table>
+</table>
+</script><script id="http-headers" output="&#xa;  Date: Mon, 29 Jul 2019 18:49:20 GMT&#xa;  Server: Apache/2.4.25 (Debian)&#xa;  Last-Modified: Mon, 13 May 2019 13:21:46 GMT&#xa;  ETag: &quot;2a23-588c4cc4e54b5&quot;&#xa;  Accept-Ranges: bytes&#xa;  Content-Length: 10787&#xa;  Vary: Accept-Encoding&#xa;  Connection: close&#xa;  Content-Type: text/html&#xa;  &#xa;  (Request type: HEAD)&#xa;"/><script id="http-server-header" output="Apache/2.4.25 (Debian)"><elem>Apache/2.4.25 (Debian)</elem>
+</script><script id="http-stored-xss" output="Couldn&apos;t find any stored XSS vulnerabilities."/><script id="http-title" output="Apache2 Debian Default Page: It works"><elem key="title">Apache2 Debian Default Page: It works</elem>
+</script><script id="http-traceroute" output="&#xa;  Possible reverse proxy detected.&#xa;"/><script id="http-xssed" output="No previously reported XSS vuln."/></port>
+</ports>
+<times srtt="70967" rttvar="70967" to="354835"/>
+</host>
+<runstats><finished time="1564426552" timestr="Mon Jul 29 20:55:52 2019" elapsed="38.61" summary="Nmap done at Mon Jul 29 20:55:52 2019; 1 IP address (1 host up) scanned in 38.61 seconds" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

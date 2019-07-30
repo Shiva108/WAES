@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- Nmap 7.70 scan initiated Mon Jul 29 21:52:19 2019 as: nmap -sSV -Pn -T4 -p 80 -&#45;script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.140_nmap_http-va 10.10.10.140 -->
+<nmaprun scanner="nmap" args="nmap -sSV -Pn -T4 -p 80 -&#45;script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.140_nmap_http-va 10.10.10.140" start="1564429939" startstr="Mon Jul 29 21:52:19 2019" version="7.70" xmloutputversion="1.04">
+<scaninfo type="syn" protocol="tcp" numservices="1" services="80"/>
+<verbose level="0"/>
+<debugging level="0"/>
+<host starttime="1564429956" endtime="1564429983"><status state="up" reason="user-set" reason_ttl="0"/>
+<address addr="10.10.10.140" addrtype="ipv4"/>
+<hostnames>
+</hostnames>
+<ports><port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="63"/><service name="http" product="Apache httpd" version="2.4.18" extrainfo="(Ubuntu)" method="probed" conf="10"><cpe>cpe:/a:apache:http_server:2.4.18</cpe></service><script id="http-date" output="Mon, 29 Jul 2019 19:46:27 GMT; -6m17s from local time."><elem key="date">2019-07-29T19:46:27+00:00</elem>
+<elem key="delta">-377.0</elem>
+</script><script id="http-devframework" output="Couldn&apos;t determine the underlying framework or CMS. Try increasing &apos;httpspider.maxpagecount&apos; value to spider more pages."/><script id="http-dombased-xss" output="Couldn&apos;t find any DOM based XSS."/><script id="http-enum" output="&#xa;  /app/: Potentially interesting directory w/ listing on &apos;apache/2.4.18 (ubuntu)&apos;&#xa;  /errors/: Potentially interesting directory w/ listing on &apos;apache/2.4.18 (ubuntu)&apos;&#xa;  /includes/: Potentially interesting directory w/ listing on &apos;apache/2.4.18 (ubuntu)&apos;&#xa;  /lib/: Potentially interesting directory w/ listing on &apos;apache/2.4.18 (ubuntu)&apos;&#xa;"/><script id="http-errors" output="Couldn&apos;t find any error pages."/><script id="http-grep" output="&#xa;  (1) http://10.10.10.140:80/: &#xa;    (1) ip: &#xa;      + 10.10.10.140&#xa;  (1) http://10.10.10.140:80/js/prototype/validation.js: &#xa;    (1) email: &#xa;      + johndoe@domain.com&#xa;  (1) http://10.10.10.140:80/js/mage/cookies.js: &#xa;    (1) email: &#xa;      + license@magentocommerce.com&#xa;  (1) http://10.10.10.140:80/js/scriptaculous/controls.js: &#xa;    (1) email: &#xa;      + tdd@tddsworld.com"><table key="(1) http://10.10.10.140:80/">
+<table key="(1) ip">
+<elem>+ 10.10.10.140</elem>
+</table>
+</table>
+<table key="(1) http://10.10.10.140:80/js/prototype/validation.js">
+<table key="(1) email">
+<elem>+ johndoe@domain.com</elem>
+</table>
+</table>
+<table key="(1) http://10.10.10.140:80/js/mage/cookies.js">
+<table key="(1) email">
+<elem>+ license@magentocommerce.com</elem>
+</table>
+</table>
+<table key="(1) http://10.10.10.140:80/js/scriptaculous/controls.js">
+<table key="(1) email">
+<elem>+ tdd@tddsworld.com</elem>
+</table>
+</table>
+</script><script id="http-headers" output="&#xa;  Date: Mon, 29 Jul 2019 19:46:26 GMT&#xa;  Server: Apache/2.4.18 (Ubuntu)&#xa;  Set-Cookie: frontend=falddb5fkcg9s4l943qj675762; expires=Mon, 29-Jul-2019 20:46:26 GMT; Max-Age=3600; path=/; domain=10.10.10.140; HttpOnly&#xa;  Expires: Thu, 19 Nov 1981 08:52:00 GMT&#xa;  Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0&#xa;  Pragma: no-cache&#xa;  X-Frame-Options: SAMEORIGIN&#xa;  Connection: close&#xa;  Content-Type: text/html; charset=UTF-8&#xa;  &#xa;  (Request type: HEAD)&#xa;"/><script id="http-stored-xss" output="Couldn&apos;t find any stored XSS vulnerabilities."/><script id="http-title" output="Home page"><elem key="title">Home page</elem>
+</script><script id="http-traceroute" output="&#xa;  Possible reverse proxy detected.&#xa;"/><script id="http-xssed" output="No previously reported XSS vuln."/></port>
+</ports>
+<times srtt="80882" rttvar="80882" to="404410"/>
+</host>
+<runstats><finished time="1564429983" timestr="Mon Jul 29 21:53:03 2019" elapsed="43.82" summary="Nmap done at Mon Jul 29 21:53:03 2019; 1 IP address (1 host up) scanned in 43.82 seconds" exit="success"/><hosts up="1" down="0" total="1"/>
+</runstats>
+</nmaprun>

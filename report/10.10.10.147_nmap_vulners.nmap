@@ -1,0 +1,38 @@
+# Nmap 7.70 scan initiated Mon Jul 29 20:55:52 2019 as: nmap -sSV -Pn -O -T4 --version-all -p 80 --script vulscan/vulscan.nse --script-args mincvss=5-0 -oA report/10.10.10.147_nmap_vulners 10.10.10.147
+Nmap scan report for 10.10.10.147
+Host is up (0.075s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.25 ((Debian))
+|_http-server-header: Apache/2.4.25 (Debian)
+| vulscan: scip VulDB - http://www.scip.ch/en/?vuldb:
+| No findings
+| 
+| MITRE CVE - http://cve.mitre.org:
+| No findings
+| 
+| OSVDB - http://www.osvdb.org:
+| No findings
+| 
+| SecurityFocus - http://www.securityfocus.com/bid/:
+| No findings
+| 
+| SecurityTracker - http://www.securitytracker.com:
+| No findings
+| 
+| IBM X-Force - http://xforce.iss.net:
+| No findings
+| 
+| Exploit-DB - http://www.exploit-db.com:
+| No findings
+| 
+| OpenVAS (Nessus) - http://www.openvas.org:
+| No findings
+|_
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 3.2 - 4.9 (95%), Linux 3.1 (94%), Linux 3.2 (94%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (94%), Linux 3.12 (94%), Linux 3.13 (94%), Linux 3.16 (94%), Linux 3.18 (94%), Linux 3.8 - 3.11 (94%), Linux 4.4 (94%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Mon Jul 29 20:56:20 2019 -- 1 IP address (1 host up) scanned in 28.34 seconds
