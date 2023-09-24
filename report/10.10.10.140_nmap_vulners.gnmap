@@ -1,4 +1,0 @@
-# Nmap 7.70 scan initiated Mon Jul 29 21:53:03 2019 as: nmap -sSV -Pn -O -T4 --version-all -p 80 --script vulscan/vulscan.nse --script-args mincvss=5-0 -oA report/10.10.10.140_nmap_vulners 10.10.10.140
-Host: 10.10.10.140 ()	Status: Up
-Host: 10.10.10.140 ()	Ports: 80/open/tcp//http//Apache httpd 2.4.18 ((Ubuntu))/	Seq Index: 260	IP ID Seq: All zeros
-# Nmap done at Mon Jul 29 21:53:33 2019 -- 1 IP address (1 host up) scanned in 30.44 seconds

@@ -1,4 +1,0 @@
-# Nmap 7.70 scan initiated Mon Jul 29 21:52:19 2019 as: nmap -sSV -Pn -T4 -p 80 --script http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute -oA report/10.10.10.140_nmap_http-va 10.10.10.140
-Host: 10.10.10.140 ()	Status: Up
-Host: 10.10.10.140 ()	Ports: 80/open/tcp//http//Apache httpd 2.4.18 ((Ubuntu))/
-# Nmap done at Mon Jul 29 21:53:03 2019 -- 1 IP address (1 host up) scanned in 43.82 seconds
