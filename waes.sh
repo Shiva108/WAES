@@ -1,193 +1,364 @@
 #!/usr/bin/env bash
+#==============================================================================
+# WAES - Web Auto Enum & Scanner
 # 2018-2024 by Shiva @ CPH:SEC
-
-# WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
-# WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
-# WAEs requires SecLists        : https://github.com/danielmiessler/SecLists
-
-# Script begins
-#===============================================================================
-
-# set -x # Starts debugging
-
-# vars
-VERSION="0.0.37 alpha"
-VULNERSDIR="vulscan" # Where to find vulscan
-REPORTDIR="report" # /report directory
-TOOLS=( "nmap" "nikto" "uniscan" "gobuster" "dirb" "whatweb" "wafw00f" )
-HTTPNSE=( "http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute" )
-PORT=80 # Setting std port
-COUNT=-1 # For tools loop
-
-#banner / help message
-echo ""
-echo -e "\e[00;32m#############################################################\e[00m"
-echo ""
-echo -e "	Web Auto Enum & Scanner $VERSION "
-echo ""
-echo -e "	Auto enums HTTP port and dumps files as result"
-echo ""
-echo -e "\e[00;32m#############################################################\e[00m"
-echo ""
-
-usage ()
-{
-echo "Usage: ${0##*/} -u {url}"
-echo "       ${0##*/} -h"
-echo ""
-echo "       -h shows this help"
-echo "       -u IP to test eg. 10.10.10.123"
-echo "       -p port number (default=80)"
-echo ""
-echo "       Example: ./waes.sh -u 10.10.10.130 -p 8080"
-echo ""
-}
-
-if [[ $(id -u) -ne 0 ]] ; then echo -e "\e[01;31m[!]\e[00m This program must be run as root. Run again with 'sudo'" ; exit 1 ; fi
-
-# Checks for input parameters
-: "${1?"No arguments supplied - run waes -h for help or cat README.md"}"
-
-# Showing parameters - for debugging only
-#echo "Positional Parameters"
-#echo '$0 = ' $0
-#echo '$1 = ' $1
-#echo '$2 = ' $2
-#echo '$3 = ' $3
-#echo '$4 = ' $4
-
-# Parameters check
-if [[ $1 == "-h" ]]
-  then
-    usage
-    exit 1
-fi
-
-if [[ "$1" != "-u" && "$1" != "-h" ]]; then
-   usage
-   echo "Invalid parameter: $1"
-   exit 1
-fi
-
-if [[ "$3" = "-p" && "$4" != "" ]]; then
-        PORT="$4"
-        # echo "Port is set to: " $PORT
-fi
-
-# Tools installed check
-COUNT=0  # Ensure this starts at 0 for zero-indexed array access
-while [[ -n "${TOOLS[COUNT]}" ]]  # Check if the tool name is non-empty
-do
-   if ! hash "${TOOLS[COUNT]}" > /dev/null 2>&1; then
-        echo -e "\\e[01;31m[!]\\e[00m ${TOOLS[COUNT]} was not found in PATH"
-        echo "Run sudo ./install.sh to install tools"
-    fi
-    COUNT=$(( COUNT + 1 ))  # Increment COUNT at the end of the loop
-done
-
-echo " "
-echo -e "Target: $2 port: $PORT"
-
-# Todo: Implement progressbar (bartest.sh)
-
-passive() {
-
-    echo "Starting PASSIVE scans..."
-    # Whatweb
-    echo -e "\e[00;32m [+] Looking up ""$2"" with whatweb - only works for online targets" "\e[00m"
-    whatweb -a 3 "$2"":""$PORT" | tee ${REPORTDIR}/"$2"_whatweb.txt
-
-    # OSIRA - For subdomain enum
-    echo -e "\e[00;32m [+] OSIRA against:" "$2" " - looking for subdomains \e[00m"
-    OSIRA/osira.sh -u "$2"":""$PORT" | tee ${REPORTDIR}/"$2"_osira.txt
-}
-
-fastscan() {
-
-    echo "Step 1: Starting fast scan... "
-    # wafw00f
-    echo -e "\e[00;32m [+] Detecting firewall ""$2"":""$PORT"" with wafw00f" "\e[00m"
-    wafw00f -a -v "$2"":""$PORT" | tee $REPORTDIR/"$2"_wafw00f.txt
-    # nmap http-enum
-    echo -e "\e[00;32m [+] nmap with HTTP-ENUM script against $2" "\e[00m"
-    nmap -sSV -Pn -T4 -p "$PORT" --script http-enum "$2" -oA ${REPORTDIR}/"$2"_nmap_http-enum
-}
-
-scan() {
-
-    echo "Step 2: Starting more in-depth scan... "
-    # nmap
-    echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-    nmap -sSV -Pn -T4 -p "$PORT" --script $HTTPNSE "$2" -oA ${REPORTDIR}/"$2"_nmap_http-va
-    echo -e "\e[00;32m [+] nmap with vulscan on $2 with min CVSS 5.0" "\e[00m"
-    nmap -sSV -Pn -O -T4 --version-all -p "$PORT" --script ${VULNERSDIR}/vulscan.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
-
-    # nikto
-    echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
-    nikto -h "$2" -port "$PORT" -C all -ask no -evasion A | tee $REPORTDIR/"$2"_nikto.txt
-
-    # uniscan
-    echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
-    uniscan -u "$2"":""$PORT" -qweds | tee $REPORTDIR/"$2"_uniscan.txt
-}
-
-fuzzing() {
-
-    echo "Step 3: Starting fuzzing... "
-    # xsser
-    # echo -e "\e[00;32m [+] xsser on $2" "\e[00m"
-    # Todo: Implement Xsser (requires url not ip)
-
-    # Supergobuster: gobuster + dirb
-    echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
-    ./supergobuster.sh "http://""$2"":""$PORT" | tee $REPORTDIR/"$2"_supergobust.txt
-}
-
-end() {
-    echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
-}
-
-# passive  $1 $2 $3 $4 # Uncomment to run, work online for online targets Todo: Add in next version
-fastscan "$1" "$2" "$3" "$4"
-scan "$1" "$2" "$3" "$4"
-fuzzing  "$1" "$2" "$3" "$4"
-end "$1" "$2" "$3" "$4"
-
-# Todo: Add from rapidscan / golismero and others
-
 #
-echo -e "Target: $2 "
+# A comprehensive web enumeration toolkit for CTF and penetration testing
+# GitHub: https://github.com/Shiva108/WAES
+#==============================================================================
 
-# Whatweb
-echo -e "\e[00;32m [+] Looking up ""$2"" with whatweb" "\e[00m"
-whatweb -a3 "$2" | tee ${REPORTDIR}/"$2"_whatweb.txt
+set -o pipefail
 
-# echo -e "\e[00;32m [+] OSIRA against:" $2 "\e[00m"
-# OSIRA/osira.sh -u $2 | tee ${REPORTDIR}/$2_osira.txt
-# mv $2.txt ${REPORTDIR}/$2_osira.txt
+#==============================================================================
+# CONFIGURATION & LIBRARIES
+#==============================================================================
 
-# nmap
-echo -e "\e[00;32m [+] nmap with standard scripts (-sC) on $2" "\e[00m"
-nmap -sSCV -Pn -T4 "$2" -oA ${REPORTDIR}/"$2"_nmap_sSCV
-echo -e "\e[00;32m [+] nmap with http-enum against $2" "\e[00m"
-nmap -sSV -Pn -T4 --script http-enum "$2" -oA ${REPORTDIR}/"$2"_nmap_http-enum
-# echo -e "\e[00;32m [+] nmap with various HTTP scripts against $2" "\e[00m"
-# nmap -sSV -Pn -T4 --script "http-*" $2 -oA ${REPORTDIR}/$2_nmap_http-va
-# echo -e "\e[00;32m [+] nmap with vulners on $2" "\e[00m"
-#echo ${VULNERSDIR}"/vulners.nse"
-#nmap -sV -Pn -O -T4 --script ${VULNERSDIR}/vulners.nse $2 --script-args mincvss=5-0 -oA ${REPORTDIR}/$2_nmap_vulners
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# nikto
-echo -e "\e[00;32m [+] nikto on $2" "\e[00m"
-nikto -h "$2" -C all -ask no -evasion A | tee $REPORTDIR/"$2"_nikto.txt
+# Source configuration and libraries
+# shellcheck source=config.sh
+source "${SCRIPT_DIR}/config.sh" 2>/dev/null || {
+    echo "[!] Warning: config.sh not found, using defaults"
+    REPORT_DIR="${SCRIPT_DIR}/report"
+    VULSCAN_DIR="${SCRIPT_DIR}/vulscan"
+}
 
-# uniscan
-echo -e "\e[00;32m [+] uniscan of $2" "\e[00m"
-uniscan -u "$2" -qweds | tee $REPORTDIR/"$2"_uniscan.txt
+# shellcheck source=lib/colors.sh
+source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null || {
+    # Fallback functions if library not found
+    print_success() { echo "[+] $*"; }
+    print_error() { echo "[!] $*" >&2; }
+    print_info() { echo "[*] $*"; }
+    print_warn() { echo "[~] $*"; }
+    print_running() { echo "[>] $*"; }
+    print_header() { echo "#### $1 ####"; }
+    print_step() { echo -e "\nStep $1: $2"; }
+}
 
-# Supergobuster: gobuster + dirb
-echo -e "\e[00;32m [+] super go busting $2" "\e[00m"
-./supergobuster.sh "$2" | tee $REPORTDIR/"$2"_supergobust.txt
+# shellcheck source=lib/validation.sh
+source "${SCRIPT_DIR}/lib/validation.sh" 2>/dev/null || {
+    validate_ipv4() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
+    validate_port() { [[ "$1" =~ ^[0-9]+$ ]] && (( $1 >= 1 && $1 <= 65535 )); }
+    command_exists() { command -v "$1" &>/dev/null; }
+}
 
-echo -e "\e[00;32m [+] WAES is done. Find results in:" ${REPORTDIR} "\e[00m"
-# set +x # Ends debugging
+# shellcheck source=lib/progress.sh
+source "${SCRIPT_DIR}/lib/progress.sh" 2>/dev/null || true
+
+#==============================================================================
+# VARIABLES
+#==============================================================================
+
+VERSION="${WAES_VERSION:-1.0.0}"
+TARGET=""
+PORT="${DEFAULT_HTTP_PORT:-80}"
+PROTOCOL="${DEFAULT_PROTOCOL:-http}"
+SCAN_TYPE="full"
+VERBOSE=false
+QUIET=false
+
+# Tools required for scanning
+REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
+
+# Nmap HTTP scripts
+HTTPNSE="http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute"
+
+#==============================================================================
+# BANNER & USAGE
+#==============================================================================
+
+show_banner() {
+    if [[ "$QUIET" != "true" ]]; then
+        print_header "Web Auto Enum & Scanner v${VERSION}"
+        echo ""
+        echo "  Auto enums HTTP/HTTPS ports and dumps results to report/"
+        echo ""
+    fi
+}
+
+usage() {
+    cat << EOF
+Usage: ${0##*/} [OPTIONS] -u <target>
+
+Options:
+    -u <target>     Target IP or domain (required)
+    -p <port>       Port number (default: 80, or 443 with -s)
+    -s              Use HTTPS protocol
+    -t <type>       Scan type: fast, full, deep (default: full)
+    -v              Verbose output
+    -q              Quiet mode (minimal output)
+    -h              Show this help message
+
+Scan Types:
+    fast    - Quick reconnaissance (wafw00f, nmap http-enum)
+    full    - Standard scan (adds nikto, nmap scripts) [default]
+    deep    - Comprehensive (adds vulscan, uniscan, fuzzing)
+
+Examples:
+    ${0##*/} -u 10.10.10.130
+    ${0##*/} -u 10.10.10.130 -p 8080
+    ${0##*/} -u example.com -s -t deep
+
+EOF
+}
+
+#==============================================================================
+# VALIDATION & SETUP
+#==============================================================================
+
+check_root() {
+    if [[ $EUID -ne 0 ]]; then
+        print_error "This script must be run as root. Use 'sudo ${0##*/}'"
+        exit 1
+    fi
+}
+
+check_tools() {
+    local missing_tools=()
+    
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if ! command_exists "$tool"; then
+            missing_tools+=("$tool")
+        fi
+    done
+    
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        print_warn "Missing tools: ${missing_tools[*]}"
+        print_info "Run: sudo ./install.sh to install required tools"
+        
+        # Continue anyway, but warn about missing functionality
+        return 1
+    fi
+    
+    return 0
+}
+
+setup_report_dir() {
+    if [[ ! -d "$REPORT_DIR" ]]; then
+        mkdir -p "$REPORT_DIR"
+        print_info "Created report directory: $REPORT_DIR"
+    fi
+}
+
+parse_args() {
+    while getopts ":u:p:t:svqh" opt; do
+        case $opt in
+            u) TARGET="$OPTARG" ;;
+            p) PORT="$OPTARG" ;;
+            s) 
+                PROTOCOL="https"
+                [[ "$PORT" == "80" ]] && PORT="443"
+                ;;
+            t) SCAN_TYPE="$OPTARG" ;;
+            v) VERBOSE=true ;;
+            q) QUIET=true ;;
+            h) 
+                show_banner
+                usage
+                exit 0
+                ;;
+            :)
+                print_error "Option -$OPTARG requires an argument"
+                usage
+                exit 1
+                ;;
+            \?)
+                print_error "Invalid option: -$OPTARG"
+                usage
+                exit 1
+                ;;
+        esac
+    done
+    
+    # Validate required arguments
+    if [[ -z "$TARGET" ]]; then
+        print_error "Target is required. Use -u <target>"
+        usage
+        exit 1
+    fi
+    
+    # Validate port
+    if ! validate_port "$PORT"; then
+        print_error "Invalid port: $PORT (must be 1-65535)"
+        exit 1
+    fi
+    
+    # Validate scan type
+    case "$SCAN_TYPE" in
+        fast|full|deep) ;;
+        *)
+            print_error "Invalid scan type: $SCAN_TYPE"
+            print_info "Valid types: fast, full, deep"
+            exit 1
+            ;;
+    esac
+}
+
+#==============================================================================
+# SCANNING FUNCTIONS
+#==============================================================================
+
+# Step 1: Passive reconnaissance
+passive_scan() {
+    print_step "0" "Passive reconnaissance (online targets only)"
+    
+    if command_exists whatweb; then
+        print_running "whatweb - CMS and technology detection"
+        whatweb -a 3 "${PROTOCOL}://${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_whatweb.txt"
+    fi
+    
+    # OSIRA subdomain enum (if available)
+    if [[ -x "${SCRIPT_DIR}/OSIRA/osira.sh" ]]; then
+        print_running "OSIRA - Subdomain enumeration"
+        "${SCRIPT_DIR}/OSIRA/osira.sh" -u "${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_osira.txt"
+    fi
+}
+
+# Step 2: Fast scan
+fast_scan() {
+    print_step "1" "Fast scan - firewall detection and quick enum"
+    
+    # Firewall detection
+    if command_exists wafw00f; then
+        print_running "wafw00f - Web Application Firewall detection"
+        wafw00f -a "${PROTOCOL}://${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_wafw00f.txt"
+    fi
+    
+    # Quick nmap http-enum
+    if command_exists nmap; then
+        print_running "nmap - HTTP enumeration script"
+        nmap -sSV -Pn -T4 -p "$PORT" --script http-enum "$TARGET" \
+            -oA "${REPORT_DIR}/${TARGET}_nmap_http-enum"
+    fi
+}
+
+# Step 3: In-depth scanning
+deep_scan() {
+    print_step "2" "In-depth scanning - vulnerability and service analysis"
+    
+    if command_exists nmap; then
+        # HTTP scripts
+        print_running "nmap - HTTP vulnerability scripts"
+        nmap -sSV -Pn -T4 -p "$PORT" --script "$HTTPNSE" "$TARGET" \
+            -oA "${REPORT_DIR}/${TARGET}_nmap_http-scripts"
+        
+        # Vulscan if available
+        if [[ -f "${VULSCAN_DIR}/vulscan.nse" ]]; then
+            print_running "nmap - Vulscan (CVSS 5.0+)"
+            nmap -sSV -Pn -T4 --version-all -p "$PORT" \
+                --script "${VULSCAN_DIR}/vulscan.nse" "$TARGET" \
+                --script-args mincvss=5.0 \
+                -oA "${REPORT_DIR}/${TARGET}_nmap_vulscan"
+        fi
+    fi
+    
+    # Nikto
+    if command_exists nikto; then
+        print_running "nikto - Web server scanner"
+        nikto -h "${PROTOCOL}://${TARGET}" -port "$PORT" -C all -ask no -evasion A 2>&1 \
+            | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
+    fi
+    
+    # Uniscan (optional)
+    if command_exists uniscan; then
+        print_running "uniscan - Vulnerability scanner"
+        uniscan -u "${PROTOCOL}://${TARGET}:${PORT}" -qweds 2>&1 \
+            | tee "${REPORT_DIR}/${TARGET}_uniscan.txt"
+    fi
+}
+
+# Step 4: Directory/file fuzzing
+fuzzing_scan() {
+    print_step "3" "Fuzzing - Directory and file discovery"
+    
+    local base_url="${PROTOCOL}://${TARGET}:${PORT}"
+    
+    # Run supergobuster if available
+    if [[ -x "${SCRIPT_DIR}/supergobuster.sh" ]]; then
+        print_running "supergobuster - Multi-wordlist directory busting"
+        "${SCRIPT_DIR}/supergobuster.sh" "$base_url" 2>&1 \
+            | tee "${REPORT_DIR}/${TARGET}_supergobust.txt"
+    elif command_exists gobuster; then
+        # Fall back to simple gobuster
+        print_running "gobuster - Directory enumeration"
+        local wordlist
+        wordlist=$(find_wordlist "directory-list-2.3-medium.txt" 2>/dev/null) || \
+            wordlist="/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt"
+        
+        if [[ -f "$wordlist" ]]; then
+            gobuster dir -u "$base_url" -w "$wordlist" \
+                -t "${GOBUSTER_THREADS:-10}" --wildcard 2>&1 \
+                | tee "${REPORT_DIR}/${TARGET}_gobuster.txt"
+        else
+            print_warn "No wordlist found for gobuster"
+        fi
+    fi
+}
+
+# Standard nmap scan
+standard_scan() {
+    print_step "S" "Standard nmap scan (-sC -sV)"
+    
+    if command_exists nmap; then
+        print_running "nmap - Standard scripts and version detection"
+        nmap -sSCV -Pn -T4 "$TARGET" -oA "${REPORT_DIR}/${TARGET}_nmap_standard"
+    fi
+}
+
+#==============================================================================
+# MAIN EXECUTION
+#==============================================================================
+
+main() {
+    # Check root
+    check_root
+    
+    # Parse arguments
+    parse_args "$@"
+    
+    # Show banner
+    show_banner
+    
+    # Display target info
+    print_info "Target: ${PROTOCOL}://${TARGET}:${PORT}"
+    print_info "Scan type: ${SCAN_TYPE}"
+    
+    # Setup
+    check_tools
+    setup_report_dir
+    
+    echo ""
+    
+    # Execute scans based on type
+    case "$SCAN_TYPE" in
+        fast)
+            fast_scan
+            ;;
+        full)
+            fast_scan
+            deep_scan
+            standard_scan
+            ;;
+        deep)
+            passive_scan
+            fast_scan
+            deep_scan
+            fuzzing_scan
+            standard_scan
+            ;;
+    esac
+    
+    # Completion message
+    echo ""
+    print_success "WAES completed! Results saved to: ${REPORT_DIR}/"
+    
+    # List generated files
+    if [[ "$VERBOSE" == "true" ]]; then
+        echo ""
+        print_info "Generated files:"
+        ls -la "${REPORT_DIR}/${TARGET}"* 2>/dev/null || true
+    fi
+}
+
+# Run main function
+main "$@"

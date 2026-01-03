@@ -1,83 +1,210 @@
-
 ![GitHub Logo](banner.png)
 
-## CPH:SEC WAES at a Glance
+# WAES - Web Auto Enum & Scanner
 
-Doing HTB or other CTFs enumeration against targets with HTTP(S) can become trivial.
-It can get tiresome to always run the same script/tests on every box eg. nmap, nikto, dirb and so on. A one-click on target with automatic reports coming solves the issue. Furthermore, with a script the enum process can be optimized while saving time for hacker. This is what **CPH:SEC WAES** or _Web Auto Enum & Scanner_ is created for. WAES runs 4 steps of scanning against target (see more below) to optimize the time spend scanning. While multi core or multi-threaded scanning could be implemented it will almost surely get boxes to hang and so is undesirable.
-* From current version and forward WAES will include an install script (see blow) as project moves from alpha to beta phase.
-* WAES could have been developed in python but good bash projects are need to learn bash.
-* WAES is currently made for CTF boxes but is moving towards online uses (see todo section)
+**Version 1.0.0**
 
-## To install:
+A comprehensive bash-based web enumeration toolkit for CTF and penetration testing. WAES automates the tedious process of running multiple scanning tools against web targets, saving time and ensuring comprehensive coverage.
+
+## Features
+
+- 🔍 **Multi-stage scanning**: Fast recon, in-depth analysis, and comprehensive fuzzing
+- 🔐 **HTTPS support**: Automatic detection and SSL/TLS scanning
+- 📊 **Organized reports**: All results saved to dedicated report directory
+- 🎨 **Color-coded output**: Easy-to-read results with progress tracking
+- ⚙️ **Configurable**: Customizable wordlists, timeouts, and scan types
+
+## Installation
+
+```bash
+git clone https://github.com/Shiva108/WAES.git
+cd WAES
+sudo ./install.sh
+```
+
+The installer will:
+
+- Detect your package manager (apt/yum/pacman)
+- Install required tools (nmap, nikto, gobuster, dirb, whatweb, wafw00f)
+- Clone SecLists wordlist collection
+- Set up vulscan NSE scripts
+- Configure permissions
+
+## Quick Start
+
+```bash
+# Basic scan
+sudo ./waes.sh -u 10.10.10.130
+
+# Scan specific port
+sudo ./waes.sh -u 10.10.10.130 -p 8080
+
+# HTTPS with deep scan
+sudo ./waes.sh -u example.com -s -t deep
+
+# Fast reconnaissance only
+sudo ./waes.sh -u 10.10.10.130 -t fast
+```
+
+## Usage
 
 ```
-1. $> git clone https://github.com/Shiva108/WAES.git
-2. $> cd WAES
-2. $> sudo ./install.sh
+Usage: waes.sh [OPTIONS] -u <target>
+
+Options:
+    -u <target>     Target IP or domain (required)
+    -p <port>       Port number (default: 80, or 443 with -s)
+    -s              Use HTTPS protocol
+    -t <type>       Scan type: fast, full, deep (default: full)
+    -v              Verbose output
+    -q              Quiet mode (minimal output)
+    -h              Show this help message
+
+Scan Types:
+    fast    - Quick reconnaissance (wafw00f, nmap http-enum)
+    full    - Standard scan (adds nikto, nmap scripts) [default]
+    deep    - Comprehensive (adds vulscan, uniscan, fuzzing)
 ```
 
-Make sure directories are set correctly in supergobuster.sh.
-Should be automatic with Kali & Parrot Linux.
-* Standard directories for lists    : SecLists/Discovery/Web-Content & SecLists/Discovery/Web-Content/CMS
-* Kali / Parrot directory list      : /usr/share/wordlists/dirbuster/
+## Scan Stages
 
+### Fast Scan (`-t fast`)
 
-## To run WAES
-Web Auto Enum &amp; Scanner - Auto enums website(s) and dumps files as result.
+- **wafw00f**: Web Application Firewall detection
+- **nmap http-enum**: Quick directory/file enumeration
 
-##############################################################################
+### Full Scan (`-t full`) [Default]
 
-        Web Auto Enum & Scanner
+Everything in fast, plus:
 
-        Auto enums website(s) and dumps files as result
+- **nmap HTTP scripts**: Headers, cookies, XSS detection
+- **nikto**: Web server vulnerability scanner
+- **Standard nmap**: Service version detection
 
-##############################################################################
+### Deep Scan (`-t deep`)
 
-Usage: waes.sh -u {IP}
-       waes.sh -h
+Everything in full, plus:
 
-       -h shows this help
-       -u IP to test eg. 10.10.10.123
-       -p port nummer (default=80)
+- **whatweb**: CMS and technology detection
+- **vulscan**: CVE vulnerability matching (CVSS 5.0+)
+- **uniscan**: Additional vulnerability checks
+- **supergobuster**: Multi-wordlist directory fuzzing
 
-       Example: ./waes.sh -u 10.10.10.130 -p 8080
+## Additional Tools
 
+### supergobuster.sh
 
-## Enumeration Process / Method
+Multi-wordlist directory enumeration using gobuster:
 
-WAES runs ..
+```bash
+./supergobuster.sh http://10.10.10.130:8080
+./supergobuster.sh http://10.10.10.130 -t 20 -x php,bak
+```
 
-Step 0 - Passive scan - (disabled in the current version)
-  + whatweb - aggressive mode
-  + OSIRA (same author) - looks for subdomains
+### resolveip.py
 
-Step 1 - Fast scan
-  + wafw00 - firewall detection
-  + nmap with http-enum
+Bulk DNS resolution with concurrent processing:
 
-Step 2 - Scan - in-depth
-  + nmap - with NSE scripts: http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute
-  + nmap with vulscan (CVSS 5.0+)
-  + nikto - with evasion A and all CGI dirs
-  + uniscan - all tests except stress test (qweds)
+```bash
+./resolveip.py domains.txt                  # Basic resolution
+./resolveip.py domains.txt -f json          # JSON output
+./resolveip.py domains.txt --ip-only        # IPs only
+./resolveip.py domains.txt -t 20 -T 3       # 20 threads, 3s timeout
+```
 
-Step 3 - Fuzzing
-+ super gobuster
-  - gobuster with multiple lists
-  - dirb with multiple lists
-+ xss scan (to come)
+### cleanrf.sh
 
-.. against target while dumping results files in report/ folder.
+Safely manage report files:
 
+```bash
+./cleanrf.sh                    # Interactive cleanup
+./cleanrf.sh -a                 # Archive before deleting
+./cleanrf.sh -d 7               # Delete files older than 7 days
+./cleanrf.sh --dry-run          # Preview without deleting
+```
 
-## To Do
-+ Implement domain as input
-+ Add XSS scan
-+ Add SSL/TLS scanning
-+ Add domain scans
-+ Add golismero
-+ Add dirble
-+ Add progressbar
-+ Add CMS detection
-+ Add CMS specific scans
+## Configuration
+
+Edit `config.sh` to customize:
+
+- Wordlist paths
+- Default timeouts
+- Threading settings
+- Nmap script selection
+- Gobuster status codes
+
+## Project Structure
+
+```text
+WAES/
+├── waes.sh              # Main scanner script
+├── supergobuster.sh     # Directory fuzzing
+├── install.sh           # Installer
+├── cleanrf.sh           # Report cleanup
+├── resolveip.py         # DNS resolution
+├── config.sh            # Configuration
+├── lib/                 # Library scripts
+│   ├── colors.sh        # Color output
+│   ├── validation.sh    # Input validation
+│   └── progress.sh      # Progress bar
+├── report/              # Scan results
+├── SecLists/            # Wordlists
+└── vulscan/             # Nmap vulscan scripts
+```
+
+## Requirements
+
+**Required Tools:**
+
+- nmap
+- nikto
+- gobuster
+- dirb
+- whatweb
+- wafw00f
+
+**Optional Tools:**
+
+- uniscan
+- feroxbuster
+- sslscan
+
+## Changelog
+
+### v1.0.0 (2024)
+
+- Complete refactor of all scripts
+- Added modular library system (colors, validation, progress)
+- Added HTTPS support with `-s` flag
+- Added scan type selection (`-t fast|full|deep`)
+- Fixed wordlist path auto-detection
+- Added concurrent DNS resolution to resolveip.py
+- Improved install script with multi-distro support
+- Enhanced cleanrf.sh with archive and days filter options
+- Removed deprecated scripts (supergobuster.old, testscript.sh)
+
+### v0.0.37 (Previous)
+
+- Initial alpha release
+
+## License
+
+GPL-2.0 License - See [LICENSE](LICENSE) for details.
+
+## Author
+
+**Shiva @ CPH:SEC**
+
+- GitHub: [Shiva108](https://github.com/Shiva108)
+
+## Contributing
+
+Pull requests welcome! For major changes, please open an issue first.
+
+## TODO
+
+- [ ] Add SSL/TLS certificate scanning
+- [ ] Add XSS payload testing
+- [ ] Add CMS-specific scan modules
+- [ ] Add HTML report generation
+- [ ] Add scan resumption capability
