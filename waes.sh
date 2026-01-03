@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 2018-2019 by Shiva @ CPH:SEC
+# 2018-2024 by Shiva @ CPH:SEC
 
 # WAES requires vulners.nse     : https://github.com/vulnersCom/nmap-vulners
 # WAES requires supergobuster   : https://gist.github.com/lokori/17a604cad15e30ddae932050bbcc42f9
@@ -75,14 +75,14 @@ if [[ "$3" = "-p" && "$4" != "" ]]; then
 fi
 
 # Tools installed check
-while [[ "x${TOOLS[COUNT]}" != "x" ]]
+COUNT=0  # Ensure this starts at 0 for zero-indexed array access
+while [[ -n "${TOOLS[COUNT]}" ]]  # Check if the tool name is non-empty
 do
-   COUNT=$(( $COUNT + 1 ))
-   if ! hash "${TOOLS[COUNT]}" /dev/null 2>&1
-    then
-        echo -e "\e[01;31m[!]\e[00m ${TOOLS[COUNT]} was not found in PATH"
+   if ! hash "${TOOLS[COUNT]}" > /dev/null 2>&1; then
+        echo -e "\\e[01;31m[!]\\e[00m ${TOOLS[COUNT]} was not found in PATH"
         echo "Run sudo ./install.sh to install tools"
     fi
+    COUNT=$(( COUNT + 1 ))  # Increment COUNT at the end of the loop
 done
 
 echo " "
