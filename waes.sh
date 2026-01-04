@@ -459,7 +459,7 @@ deep_scan() {
                 "${REPORT_DIR}/${TARGET}_nikto.txt" "$evasion_level" | tee -a "${REPORT_DIR}/${TARGET}_scan.log"
         else
             # Standard nikto
-            nikto -h "${PROTOCOL}://${TARGET}" -port "$PORT" -C all -ask no -evasion A 2>&1 \
+            nikto -h "${PROTOCOL}://${TARGET}:${PORT}" -C all -ask no -evasion A 2>&1 \
                 | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
         fi
     elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then

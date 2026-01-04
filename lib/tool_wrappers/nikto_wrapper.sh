@@ -18,7 +18,7 @@ run_nikto_with_evasion() {
     # Check if evasion is enabled
     if [[ "${EVASION_ENABLED:-false}" != "true" ]]; then
         # Standard nikto scan
-        nikto -h "${protocol}://${target}" -port "$port" -C all -ask no \
+        nikto -h "${protocol}://${target}:${port}" -C all -ask no \
               -output "$output_file" 2>&1
         return $?
     fi
@@ -42,8 +42,7 @@ run_nikto_with_evasion() {
     print_info "Evasion settings: UA rotated, flags: $evasion_flags, pause: ${pause_sec}s"
     
     # Run nikto with evasion
-    nikto -h "${protocol}://${target}" \
-          -port "$port" \
+    nikto -h "${protocol}://${target}:${port}" \
           -useragent "$user_agent" \
           -evasion "$evasion_flags" \
           -Pause "$pause_sec" \
