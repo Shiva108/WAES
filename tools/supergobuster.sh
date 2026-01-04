@@ -207,11 +207,9 @@ main() {
     # Get wordlist directory
     local wl_dir
     wl_dir=$(find_wordlist_dir) || {
-        log_error "No wordlist directory found. Check paths:"
-        for path in "${WORDLIST_PATHS[@]}"; do
-            echo "  - $path"
-        done
-        exit 1
+        log_error "No wordlist directory found. Skipping fuzzing."
+        log_info "To enable fuzzing, install SecLists in tools/SecLists or /usr/share/wordlists"
+        exit 0
     }
     
     log_info "Using wordlists from: $wl_dir"
