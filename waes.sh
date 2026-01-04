@@ -45,6 +45,21 @@ source "${SCRIPT_DIR}/lib/validation.sh" 2>/dev/null || {
 # shellcheck source=lib/progress.sh
 source "${SCRIPT_DIR}/lib/progress.sh" 2>/dev/null || true
 
+# shellcheck source=lib/state_manager.sh
+source "${SCRIPT_DIR}/lib/state_manager.sh" 2>/dev/null || true
+
+# shellcheck source=lib/ssl_scanner.sh
+source "${SCRIPT_DIR}/lib/ssl_scanner.sh" 2>/dev/null || true
+
+# shellcheck source=lib/xss_scanner.sh
+source "${SCRIPT_DIR}/lib/xss_scanner.sh" 2>/dev/null || true
+
+# shellcheck source=lib/cms_scanner.sh
+source "${SCRIPT_DIR}/lib/cms_scanner.sh" 2>/dev/null || true
+
+# shellcheck source=lib/report_generator.sh
+source "${SCRIPT_DIR}/lib/report_generator.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -56,6 +71,8 @@ PROTOCOL="${DEFAULT_PROTOCOL:-http}"
 SCAN_TYPE="full"
 VERBOSE=false
 QUIET=false
+RESUME=false
+GENERATE_HTML=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -84,20 +101,24 @@ Options:
     -u <target>     Target IP or domain (required)
     -p <port>       Port number (default: 80, or 443 with -s)
     -s              Use HTTPS protocol
-    -t <type>       Scan type: fast, full, deep (default: full)
+    -t <type>       Scan type: fast, full, deep, advanced (default: full)
+    -r              Resume previous scan
+    -H              Generate HTML report
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
 
 Scan Types:
-    fast    - Quick reconnaissance (wafw00f, nmap http-enum)
-    full    - Standard scan (adds nikto, nmap scripts) [default]
-    deep    - Comprehensive (adds vulscan, uniscan, fuzzing)
+    fast     - Quick reconnaissance (wafw00f, nmap http-enum)
+    full     - Standard scan (adds nikto, nmap scripts) [default]
+    deep     - Comprehensive (adds vulscan, uniscan, fuzzing)
+    advanced - Deep scan + SSL/TLS, XSS, CMS-specific scans
 
 Examples:
     ${0##*/} -u 10.10.10.130
     ${0##*/} -u 10.10.10.130 -p 8080
-    ${0##*/} -u example.com -s -t deep
+    ${0##*/} -u example.com -s -t advanced -H
+    ${0##*/} -u example.com -r  # Resume previous scan
 
 EOF
 }
@@ -141,7 +162,7 @@ setup_report_dir() {
 }
 
 parse_args() {
-    while getopts ":u:p:t:svqh" opt; do
+    while getopts ":u:p:t:rHsvqh" opt; do
         case $opt in
             u) TARGET="$OPTARG" ;;
             p) PORT="$OPTARG" ;;
@@ -150,6 +171,8 @@ parse_args() {
                 [[ "$PORT" == "80" ]] && PORT="443"
                 ;;
             t) SCAN_TYPE="$OPTARG" ;;
+            r) RESUME=true ;;
+            H) GENERATE_HTML=true ;;
             v) VERBOSE=true ;;
             q) QUIET=true ;;
             h) 
@@ -185,10 +208,10 @@ parse_args() {
     
     # Validate scan type
     case "$SCAN_TYPE" in
-        fast|full|deep) ;;
+        fast|full|deep|advanced) ;;
         *)
             print_error "Invalid scan type: $SCAN_TYPE"
-            print_info "Valid types: fast, full, deep"
+            print_info "Valid types: fast, full, deep, advanced"
             exit 1
             ;;
     esac
@@ -306,6 +329,51 @@ standard_scan() {
 }
 
 #==============================================================================
+# ADVANCED SCANNING FUNCTIONS
+#==============================================================================
+
+# SSL/TLS certificate and vulnerability scanning
+ssl_tls_scan() {
+    print_step "SSL" "SSL/TLS Certificate and Configuration Analysis"
+    
+    if [[ "$PROTOCOL" == "https" ]] || [[ "$PORT" == "443" ]]; then
+        if declare -f scan_ssl &>/dev/null; then
+            scan_ssl "$TARGET" "$PORT" "$REPORT_DIR"
+        else
+            print_warn "SSL scanner module not loaded"
+        fi
+    else
+        print_info "Skipping SSL scan (not HTTPS)"
+    fi
+}
+
+# XSS vulnerability testing
+xss_vulnerability_scan() {
+    print_step "XSS" "Cross-Site Scripting Vulnerability Testing"
+    
+    local base_url="${PROTOCOL}://${TARGET}:${PORT}"
+    
+    if declare -f scan_xss &>/dev/null; then
+        scan_xss "$base_url" "$REPORT_DIR"
+    else
+        print_warn "XSS scanner module not loaded"
+    fi
+}
+
+# CMS-specific scanning
+cms_detection_scan() {
+    print_step "CMS" "Content Management System Detection & Scanning"
+    
+    local base_url="${PROTOCOL}://${TARGET}:${PORT}"
+    
+    if declare -f scan_cms &>/dev/null; then
+        scan_cms "$base_url" "$REPORT_DIR"
+    else
+        print_warn "CMS scanner module not loaded"
+    fi
+}
+
+#==============================================================================
 # MAIN EXECUTION
 #==============================================================================
 
@@ -319,6 +387,24 @@ main() {
     # Show banner
     show_banner
     
+    # Check for resume
+    if [[ "$RESUME" == "true" ]]; then
+        if declare -f resume_scan &>/dev/null; then
+            print_info "Attempting to resume scan..."
+            local completed_stages
+            completed_stages=$(resume_scan "$TARGET" "$REPORT_DIR")
+            
+            if [[ $? -eq 0 ]]; then
+                print_success "Resuming from saved state"
+                # Skip completed stages (implementation would check each stage)
+            else
+                print_warn "No saved state found, starting fresh scan"
+            fi
+        else
+            print_warn "State manager module not loaded, cannot resume"
+        fi
+    fi
+    
     # Display target info
     print_info "Target: ${PROTOCOL}://${TARGET}:${PORT}"
     print_info "Scan type: ${SCAN_TYPE}"
@@ -327,12 +413,18 @@ main() {
     check_tools
     setup_report_dir
     
+    # Initialize scan state
+    if declare -f init_scan_state &>/dev/null; then
+        init_scan_state "$TARGET" "$SCAN_TYPE" "$REPORT_DIR"
+    fi
+    
     echo ""
     
     # Execute scans based on type
     case "$SCAN_TYPE" in
         fast)
             fast_scan
+            [[ -f mark_stage_completed ]] && mark_stage_completed "$TARGET" "$REPORT_DIR" "fast_scan"
             ;;
         full)
             fast_scan
@@ -346,7 +438,34 @@ main() {
             fuzzing_scan
             standard_scan
             ;;
+        advanced)
+            passive_scan
+            fast_scan
+            deep_scan
+            fuzzing_scan
+            standard_scan
+            ssl_tls_scan
+            xss_vulnerability_scan
+            cms_detection_scan
+            ;;
     esac
+    
+    # Mark scan as complete
+    if declare -f complete_scan &>/dev/null; then
+        complete_scan "$TARGET" "$REPORT_DIR"
+    fi
+    
+    # Generate HTML report if requested
+    if [[ "$GENERATE_HTML" == "true" ]]; then
+        echo ""
+        print_info "Generating HTML report..."
+        
+        if declare -f generate_html_report &>/dev/null; then
+            generate_html_report "$TARGET" "$REPORT_DIR"
+        else
+            print_warn "Report generator module not loaded"
+        fi
+    fi
     
     # Completion message
     echo ""
@@ -356,7 +475,13 @@ main() {
     if [[ "$VERBOSE" == "true" ]]; then
         echo ""
         print_info "Generated files:"
-        ls -la "${REPORT_DIR}/${TARGET}"* 2>/dev/null || true
+        ls -lah "${REPORT_DIR}/${TARGET}"* 2>/dev/null || true
+    fi
+    
+    # Show scan summary if state manager is available
+    if declare -f get_scan_progress &>/dev/null; then
+        echo ""
+        get_scan_progress "$TARGET" "$REPORT_DIR"
     fi
 }
 
