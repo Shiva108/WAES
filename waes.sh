@@ -109,15 +109,7 @@ PARALLEL_MODE=false
 
 # New Feature Flags
 TRACK_CHAINS=false
-EVIDENCE_MODE=false
-GENERATE_WRITEUP=false
-WRITEUP_FORMAT="markdown"
-OWASP_SCAN=false
-API_SCAN=false
-
-# New Feature Flags
-TRACK_CHAINS=false
-EVIDENCE_MODE=false
+EVIDENCE_MODE=true
 GENERATE_WRITEUP=false
 WRITEUP_FORMAT="markdown"
 OWASP_SCAN=false
@@ -192,9 +184,10 @@ Options:
     -r              Resume previous scan
     -H              Generate HTML report
     -J              Generate JSON report
-    -w, --writeup   Generate CTF writeup (markdown)
-    -E, --evidence  Enable auto-evidence collection
-    -C, --chains    Enable vulnerability chain tracking
+    -w, --writeup       Generate CTF writeup (markdown)
+    -E, --evidence      Enable auto-evidence collection (Default: ON)
+    --no-evidence       Disable auto-evidence collection
+    -C, --chains        Enable vulnerability chain tracking
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
@@ -298,6 +291,7 @@ parse_args() {
             -J) GENERATE_JSON=true; shift ;;
             -w|--writeup) GENERATE_WRITEUP=true; shift ;;
             -E|--evidence) EVIDENCE_MODE=true; shift ;;
+            --no-evidence) EVIDENCE_MODE=false; shift ;;
             -C|--chains) TRACK_CHAINS=true; shift ;;
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
