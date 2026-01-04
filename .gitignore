@@ -1,0 +1,285 @@
+# WAES - Web Auto Enum & Scanner
+# Git Ignore File
+
+#==============================================================================
+# WAES-Specific Directories
+#==============================================================================
+
+# Scan reports and results
+report/
+reports/
+baselines/
+monitoring/
+*.log
+*.txt.bak
+
+# Empty/incomplete submodules
+dirble/
+pywhatcms/
+
+# Python cache (explicitly listed)
+__pycache__/
+
+# State files
+.waes_state_*.json
+
+# Temporary scan files
+*_nmap.nmap
+*_nmap.gnmap
+*_nmap.xml
+*_nikto.txt
+*_ssl_scan.txt
+*_cms_scan.txt
+*_xss_scan.txt
+*_osint_*.txt
+*_params_*.txt
+
+# Generated reports
+*_report.html
+*_report.json
+*_report.xml
+*_report.csv
+*_report.md
+
+# Test results
+test_results/
+test_output.txt
+
+#==============================================================================
+# Language-Specific
+#==============================================================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.cover
+.hypothesis/
+
+# Bash
+*.swp
+*.swo
+*~
+
+#==============================================================================
+# IDE & Editor Files
+#==============================================================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+#==============================================================================
+# Operating System Files
+#==============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+.nfs*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+#==============================================================================
+# Security & Credentials
+#==============================================================================
+
+# API keys and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# GPG keys
+*.gpg
+*.asc
+
+# Password files
+passwords.txt
+credentials.txt
+secrets.txt
+
+#==============================================================================
+# Docker & Containers
+#==============================================================================
+
+# Docker
+.dockerignore.bak
+docker-compose.override.yml
+
+#==============================================================================
+# Version Control
+#==============================================================================
+
+# Git
+*.orig
+*.rej
+.git-rewrite/
+
+#==============================================================================
+# Build & Dependencies
+#==============================================================================
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compiled files
+*.o
+*.a
+*.class
+*.jar
+*.war
+*.ear
+
+#==============================================================================
+# Backup & Temporary Files
+#==============================================================================
+
+# Backups
+*.bak
+*.backup
+*.old
+*-backup
+*-old
+backup/
+backups/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+.cache/
+
+# Archives (unless needed for distribution)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+#==============================================================================
+# Custom Additions
+#==============================================================================
+
+# User-specific configurations
+local_config.sh
+custom_profiles/
+my_targets.txt
+
+# Large wordlists (if not in repo)
+wordlists/
+SecLists/
+vulscan/
+
+# Downloaded tools
+tools/
+bin/
+
+# Personal notes
+notes.txt
+TODO.md
+NOTES.md
+
+# Foreign/External Git Repositories
+# These are cloned or downloaded as dependencies
+SecLists/
+vulscan/
+OSIRA/
+nmap-vulners/
+vulners-nse-scripts/
+exploit-database/
+PayloadsAllTheThings/
