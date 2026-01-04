@@ -1,0 +1,36 @@
+name: "Generic WAF"
+severity: "low"
+description: "Generic WAF or unknown firewall"
+
+evasion_level: "low"
+request_delay: 1000
+randomize_delays: true
+
+techniques:
+  user_agent_rotation: true
+  header_manipulation: "basic"
+  rate_limiting: false
+  payload_obfuscation:
+    - "url"
+
+custom_headers:
+  - "X-Forwarded-For: 127.0.0.1"
+
+tools:
+  nikto:
+    evasion_flags: "1"
+    pause: 500
+  gobuster:
+    delay: "500ms"
+  nmap:
+    timing: "T3"
+
+success_criteria:
+  target_status_codes:
+    - 200
+    - 301
+    - 302
+    - 404
+  block_indicators:
+    - status: 403
+    - status: 429

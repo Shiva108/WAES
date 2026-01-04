@@ -73,6 +73,13 @@ source "${SCRIPT_DIR}/lib/batch_scanner.sh" 2>/dev/null || true
 # shellcheck source=lib/parallel_scan.sh
 source "${SCRIPT_DIR}/lib/parallel_scan.sh" 2>/dev/null || true
 
+# WAF Detection & Evasion
+# shellcheck source=lib/waf_detector.sh
+source "${SCRIPT_DIR}/lib/waf_detector.sh" 2>/dev/null || true
+
+# shellcheck source=lib/evasion_techniques.sh
+source "${SCRIPT_DIR}/lib/evasion_techniques.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -302,10 +309,36 @@ passive_scan() {
 fast_scan() {
     print_step "1" "Fast scan - firewall detection and quick enum"
     
-    # Firewall detection
+    # Firewall detection with WAF profiling
     if command_exists wafw00f; then
         print_running "wafw00f - Web Application Firewall detection"
-        wafw00f -a "${PROTOCOL}://${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_wafw00f.txt"
+        local waf_result="${REPORT_DIR}/${TARGET}_wafw00f.txt"
+        
+        # Run WAF detection
+        if detect_waf "$TARGET" "$PORT" "$PROTOCOL" "$waf_result" 2>&1 | tee -a "${REPORT_DIR}/${TARGET}_scan.log"; then
+            # Parse results and load evasion profile
+            WAF_NAME=$(parse_waf_result "$waf_result")
+            WAF_CONFIDENCE=$(get_waf_confidence "$waf_result")
+            
+            if [[ "$WAF_NAME" != "none" ]]; then
+                print_warn "WAF DETECTED: $WAF_NAME (Confidence: ${WAF_CONFIDENCE}%)"
+                
+                # Load evasion profile
+                WAF_PROFILE=$(get_evasion_profile "$WAF_NAME")
+                export WAF_DETECTED=true
+                export WAF_NAME
+                export WAF_PROFILE
+                export EVASION_ENABLED=true
+                
+                print_info "Loading evasion profile: $(basename "$WAF_PROFILE" .yml)"
+                
+                # Generate summary
+                generate_waf_summary "$TARGET" "$waf_result" "${REPORT_DIR}/${TARGET}_waf_summary.txt"
+            else
+                print_success "No WAF detected - proceeding with standard scanning"
+                export WAF_DETECTED=false
+            fi
+        fi
     fi
     
     # Quick nmap http-enum

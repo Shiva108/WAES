@@ -1,0 +1,44 @@
+name: "ModSecurity"
+severity: "medium"
+description: "ModSecurity Open Source WAF"
+
+evasion_level: "moderate"
+request_delay: 1000
+randomize_delays: true
+
+techniques:
+  user_agent_rotation: true
+  header_manipulation: "basic"
+  rate_limiting: true
+  payload_obfuscation:
+    - "url"
+    - "case_variation"
+    - "unicode"
+  fragmentation: true
+
+custom_headers:
+  - "X-Forwarded-For: 127.0.0.1"
+  - "X-Originating-IP: 127.0.0.1"
+
+tools:
+  nikto:
+    evasion_flags: "127"
+    pause: 1000
+  gobuster:
+    delay: "1s"
+  nmap:
+    timing: "T3"
+
+success_criteria:
+  avoid_headers:
+    - "mod_security"
+  target_status_codes:
+    - 200
+    - 301
+    - 302
+    - 404
+  block_indicators:
+    - status: 403
+    - status: 406
+    - body_contains: "mod_security"
+    - body_contains: "not acceptable"

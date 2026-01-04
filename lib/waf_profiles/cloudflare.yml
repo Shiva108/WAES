@@ -1,0 +1,70 @@
+name: "Cloudflare WAF"
+severity: "high"
+description: "Cloudflare Web Application Firewall protection"
+
+# Evasion settings
+evasion_level: "moderate"
+request_delay: 2000 # milliseconds
+randomize_delays: true
+
+# Techniques to apply
+techniques:
+  user_agent_rotation: true
+  header_manipulation: "cloudflare"
+  rate_limiting: true
+  payload_obfuscation:
+    - "url"
+    - "case_variation"
+
+# Custom headers for Cloudflare bypass
+custom_headers:
+  - "X-Forwarded-For: 127.0.0.1"
+  - "CF-Connecting-IP: 10.0.0.1"
+  - "X-Originating-IP: 172.16.0.1"
+  - "X-Remote-IP: 192.168.1.1"
+
+# Tool-specific configurations
+tools:
+  nikto:
+    evasion_flags: "1247"
+    pause: 2000
+    throttle: 2
+
+  gobuster:
+    delay: "2s"
+    wildcard: true
+    no_error: true
+
+  nmap:
+    timing: "T2" # Polite
+
+# Success indicators
+success_criteria:
+  # Headers to avoid in responses (indicates blocking)
+  avoid_headers:
+    - "cf-ray"
+    - "cf-cache-status"
+    - "cf-request-id"
+
+  # Target status codes (not blocked)
+  target_status_codes:
+    - 200
+    - 301
+    - 302
+    - 404
+
+  # Blocking indicators
+  block_indicators:
+    - status: 403
+    - status: 429
+    - body_contains: "cloudflare"
+    - body_contains: "ray id"
+
+# Escalation strategy
+escalation:
+  - level: "moderate"
+    on_block: "increase_delay"
+  - level: "high"
+    on_block: "rotate_ip"
+  - level: "paranoid"
+    on_block: "manual_review"
