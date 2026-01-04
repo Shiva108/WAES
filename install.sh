@@ -139,7 +139,10 @@ clone_dependencies() {
     # SecLists
     if [[ -d "${SCRIPT_DIR}/external/SecLists/.git" ]]; then
         log_info "Updating SecLists..."
-        cd "${SCRIPT_DIR}/external/SecLists" && git pull --quiet
+        cd "${SCRIPT_DIR}/external/SecLists"
+        git stash --quiet
+        git pull --quiet
+        git stash pop --quiet 2>/dev/null || true
     elif [[ ! -d "${SCRIPT_DIR}/external/SecLists" ]] || [[ -z "$(ls -A "${SCRIPT_DIR}/external/SecLists" 2>/dev/null)" ]]; then
         log_info "Cloning SecLists (this may take a while)..."
         git clone --depth 1 https://github.com/danielmiessler/SecLists.git "${SCRIPT_DIR}/external/SecLists"
@@ -150,7 +153,10 @@ clone_dependencies() {
     # Vulscan
     if [[ -d "${SCRIPT_DIR}/external/vulscan/.git" ]]; then
         log_info "Updating vulscan..."
-        cd "${SCRIPT_DIR}/external/vulscan" && git pull --quiet
+        cd "${SCRIPT_DIR}/external/vulscan"
+        git stash --quiet
+        git pull --quiet
+        git stash pop --quiet 2>/dev/null || true
     elif [[ ! -d "${SCRIPT_DIR}/external/vulscan" ]] || [[ ! -f "${SCRIPT_DIR}/external/vulscan/vulscan.nse" ]]; then
         log_info "Cloning vulscan..."
         rm -rf "${SCRIPT_DIR}/external/vulscan"
