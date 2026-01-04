@@ -7,6 +7,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null || true
 
+# Fallback function if colors.sh not loaded
+command_exists() { command -v "$1" &>/dev/null; }
+
 #==============================================================================
 # CONFIGURATION
 #==============================================================================
@@ -52,6 +55,9 @@ detect_technologies() {
     local target="$1"
     local port="${2:-80}"
     local protocol="${3:-http}"
+    
+    # Set default REPORT_DIR if not set (for standalone execution)
+    REPORT_DIR="${REPORT_DIR:-$(mktemp -d /tmp/waes_scan_XXXXXX)}"
     
     local url="${protocol}://${target}:${port}"
     local technologies=()

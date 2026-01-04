@@ -8,6 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/cvss_calculator.sh" 2>/dev/null || true
 
+# Fallback functions
+print_info() { echo "[*] $1"; }
+print_warn() { echo "[~] $1"; }
+print_success() { echo "[+] $1"; }
+print_error() { echo "[!] $1"; }
+
 #==============================================================================
 # CONFIGURATION
 #==============================================================================

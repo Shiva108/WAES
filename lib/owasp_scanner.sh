@@ -9,12 +9,21 @@ source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/cvss_calculator.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/evidence_collector.sh" 2>/dev/null || true
 
+# Fallback functions if not loaded from colors.sh
+print_info() { echo "[*] $1"; }
+print_running() { echo "[>] $1"; }
+print_warn() { echo "[~] $1"; }
+print_success() { echo "[+] $1"; }
+print_error() { echo "[!] $1"; }
+print_header() { echo ""; echo "############################################################"; echo "# $1"; echo "############################################################"; }
+
 #==============================================================================
 # CONFIGURATION
 #==============================================================================
 
 OWASP_MODE="${OWASP_MODE:-quick}"  # quick or thorough
 OWASP_FINDINGS=()
+REPORT_DIR="${REPORT_DIR:-$(mktemp -d /tmp/waes_owasp_XXXXXX)}"
 
 #==============================================================================
 # HELPER FUNCTIONS

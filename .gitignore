@@ -8,6 +8,7 @@
 .idea/
 __pycache__/
 external/
+/tests/
 
 # Scan reports and results
 report/
