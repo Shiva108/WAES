@@ -2,6 +2,59 @@
 
 All notable changes to the WAES project.
 
+## [1.1.0] - 2026-01-04
+
+### Added - Advanced Security Features
+
+- **SSL/TLS Scanner Module** (`lib/ssl_scanner.sh`)
+
+  - Certificate validation and expiration checking
+  - Protocol support testing (SSLv2-TLSv1.3)
+  - Cipher suite enumeration
+  - Vulnerability checks (Heartbleed, POODLE, BEAST, weak ciphers)
+  - Integration with sslscan and testssl.sh
+
+- **XSS Scanner Module** (`lib/xss_scanner.sh`)
+
+  - Comprehensive payload library (basic, encoded, advanced, DOM-based)
+  - Form detection and analysis
+  - Reflected payload detection
+  - Integration with XSSer
+
+- **CMS Scanner Module** (`lib/cms_scanner.sh`)
+
+  - WordPress: version, themes, plugins, users, vulnerable files
+  - Drupal: version, modules, info files, Droopescan integration
+  - Joomla: version, components, admin panel, JoomScan integration
+
+- **HTML Report Generator** (`lib/report_generator.sh`)
+
+  - Professional HTML reports with modern CSS styling
+  - Automatic table of contents
+  - Severity-based color coding
+  - Executive summary and recommendations
+
+- **Scan State Manager** (`lib/state_manager.sh`)
+  - JSON-based state persistence
+  - Scan resumption capability (`-r` flag)
+  - Progress tracking and stage completion
+  - Error logging
+
+### Changed
+
+- **waes.sh** - Integrated advanced modules
+  - Added "advanced" scan type (deep + SSL/TLS + XSS + CMS)
+  - Added `-r` flag for resume capability
+  - Added `-H` flag for HTML report generation
+  - Increased from 365 to 438 lines
+
+### Verified
+
+- All 5 new modules pass bash syntax validation
+- Standalone execution mode for each module
+- Integration testing with main waes.sh
+- Documentation updated with new features
+
 ## [1.0.0] - 2024
 
 ### Added
