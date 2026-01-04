@@ -366,19 +366,22 @@ generate_html_report() {
         echo '</div></div>'
         
         # Include scan results
-        for file in "${report_dir}/${target}"*.{txt,nmap,gnmap} 2>/dev/null; do
-            [[ -f "$file" ]] || continue
-            
-            local basename
-            basename=$(basename "$file")
-            local section_title="${basename%.*}"
-            
-            # Read file content
-            local content
-            content=$(<"$file")
-            
-            # Convert to HTML section
-            text_to_html_section "$section_title" "$content"
+        local file_pattern
+        for ext in txt nmap gnmap; do
+            for file in "${report_dir}/${target}"*."${ext}" 2>/dev/null; do
+                [[ -f "$file" ]] || continue
+                
+                local basename
+                basename=$(basename "$file")
+                local section_title="${basename%.*}"
+                
+                # Read file content
+                local content
+                content=$(<"$file")
+                
+                # Convert to HTML section
+                text_to_html_section "$section_title" "$content"
+            done
         done
         
         # Recommendations

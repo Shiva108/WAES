@@ -1,0 +1,11 @@
+{
+  "target": "test.example.com",
+  "scan_type": "advanced",
+  "start_time": "2026-01-04 01:05:17",
+  "last_update": "2026-01-04 01:05:17",
+  "status": "running",
+  "completed_stages": [],
+  "current_stage": "",
+  "total_stages": 0,
+  "errors": []
+}
