@@ -2,7 +2,7 @@
 
 # WAES - Web Auto Enum & Scanner
 
-**Version 1.0.0**
+## Version 1.0.0
 
 A comprehensive bash-based web enumeration toolkit for CTF and penetration testing. WAES automates the tedious process of running multiple scanning tools against web targets, saving time and ensuring comprehensive coverage.
 
@@ -42,28 +42,37 @@ sudo ./waes.sh -u 10.10.10.130 -p 8080
 # HTTPS with deep scan
 sudo ./waes.sh -u example.com -s -t deep
 
+# Advanced scan with SSL/TLS, XSS, CMS detection + HTML report
+sudo ./waes.sh -u example.com -s -t advanced -H
+
+# Resume a previous scan
+sudo ./waes.sh -u example.com -r
+
 # Fast reconnaissance only
 sudo ./waes.sh -u 10.10.10.130 -t fast
 ```
 
 ## Usage
 
-```
+```test
 Usage: waes.sh [OPTIONS] -u <target>
 
 Options:
     -u <target>     Target IP or domain (required)
     -p <port>       Port number (default: 80, or 443 with -s)
     -s              Use HTTPS protocol
-    -t <type>       Scan type: fast, full, deep (default: full)
+    -t <type>       Scan type: fast, full, deep, advanced (default: full)
+    -r              Resume previous scan
+    -H              Generate HTML report
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
 
 Scan Types:
-    fast    - Quick reconnaissance (wafw00f, nmap http-enum)
-    full    - Standard scan (adds nikto, nmap scripts) [default]
-    deep    - Comprehensive (adds vulscan, uniscan, fuzzing)
+    fast     - Quick reconnaissance (wafw00f, nmap http-enum)
+    full     - Standard scan (adds nikto, nmap scripts) [default]
+    deep     - Comprehensive (adds vulscan, uniscan, fuzzing)
+    advanced - Deep + SSL/TLS, XSS testing, CMS-specific scans
 ```
 
 ## Scan Stages
@@ -89,6 +98,15 @@ Everything in full, plus:
 - **vulscan**: CVE vulnerability matching (CVSS 5.0+)
 - **uniscan**: Additional vulnerability checks
 - **supergobuster**: Multi-wordlist directory fuzzing
+
+### Advanced Scan (`-t advanced`)
+
+Everything in deep, plus:
+
+- **SSL/TLS scanner**: Certificate validation, cipher analysis, vulnerability checks
+- **XSS scanner**: Cross-Site Scripting payload testing
+- **CMS scanner**: WordPress, Drupal, Joomla detection and enumeration
+- **HTML report**: Professional formatted report generation
 
 ## Additional Tools
 
@@ -203,8 +221,8 @@ Pull requests welcome! For major changes, please open an issue first.
 
 ## TODO
 
-- [ ] Add SSL/TLS certificate scanning
-- [ ] Add XSS payload testing
-- [ ] Add CMS-specific scan modules
-- [ ] Add HTML report generation
-- [ ] Add scan resumption capability
+- [x] Add SSL/TLS certificate scanning
+- [x] Add XSS payload testing
+- [x] Add CMS-specific scan modules
+- [x] Add HTML report generation
+- [x] Add scan resumption capability
