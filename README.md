@@ -1,4 +1,4 @@
-![GitHub Logo](banner.png)
+![GitHub Logo](/assets/banner.png)
 
 # WAES - Web Auto Enum & Scanner
 

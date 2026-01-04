@@ -398,7 +398,7 @@ deep_scan() {
         wait $NMAP_PID 2>/dev/null || true
     fi
     
-    if command_exists nmap; then
+    if command_exists nmap && [[ "$SKIP_CURRENT_TOOL" == "false" ]]; then
         # HTTP scripts (parallel)
         print_running "nmap - HTTP vulnerability scripts (background)"
         nmap -sSV -Pn -T4 -p "$PORT" --script "$HTTPNSE" "$TARGET" \
@@ -415,10 +415,13 @@ deep_scan() {
         
         # Wait for both to complete
         wait
+    elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
+        print_warn "Skipped nmap scans"
+        SKIP_CURRENT_TOOL=false
     fi
     
     # Nikto with evasion support
-    if command_exists nikto; then
+    if command_exists nikto && [[ "$SKIP_CURRENT_TOOL" == "false" ]]; then
         print_running "nikto - Web server scanner"
         
         # Use wrapper if evasion is enabled
@@ -432,13 +435,19 @@ deep_scan() {
             nikto -h "${PROTOCOL}://${TARGET}" -port "$PORT" -C all -ask no -evasion A 2>&1 \
                 | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
         fi
+    elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
+        print_warn "Skipped nikto"
+        SKIP_CURRENT_TOOL=false
     fi
     
     # Uniscan (optional)
-    if command_exists uniscan; then
+    if command_exists uniscan && [[ "$SKIP_CURRENT_TOOL" == "false" ]]; then
         print_running "uniscan - Vulnerability scanner"
         uniscan -u "${PROTOCOL}://${TARGET}:${PORT}" -qweds 2>&1 \
             | tee "${REPORT_DIR}/${TARGET}_uniscan.txt"
+    elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
+        print_warn "Skipped uniscan"
+        SKIP_CURRENT_TOOL=false
     fi
 }
 
