@@ -95,6 +95,12 @@ source "${SCRIPT_DIR}/lib/intelligence_engine.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/report_engine/generator.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/email_compliance.sh" 2>/dev/null || true
 
+# Phase 3: Security testing modules
+source "${SCRIPT_DIR}/lib/security_tests/sqli_scanner.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/security_tests/auth_scanner.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/security_tests/api_scanner.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/security_tests/upload_scanner.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -127,6 +133,13 @@ ORCHESTRATE=false
 INTEL_ENRICH=false
 PROFESSIONAL_REPORT=false
 EMAIL_COMPLIANCE=false
+
+# Security testing flags (Phase 3)
+SQLI_TEST=false
+AUTH_TEST=false
+API_SECURITY_TEST=false
+UPLOAD_TEST=false
+FULL_SECURITY_TEST=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -203,6 +216,11 @@ Options:
     -C, --chains        Enable vulnerability chain tracking
     --owasp             Run OWASP Top 10 focused scan
     --email-compliance  Test domain email authentication (SPF/DKIM/DMARC)
+    --sqli              Run SQL injection tests
+    --auth-test         Run authentication/session security tests
+    --api-scan          Run API security tests
+    --upload-test       Run file upload vulnerability tests
+    --full-security     Run all security tests (SQLi, auth, API, upload)
     --orchestrate       Use intelligent orchestration engine
     --intel             Enable CVE correlation and exploit mapping
     --professional      Generate professional pentest report (exec summary + findings)
@@ -313,6 +331,11 @@ parse_args() {
             -C|--chains) TRACK_CHAINS=true; shift ;;
             --owasp) OWASP_SCAN=true; shift ;;
             --email-compliance) EMAIL_COMPLIANCE=true; shift ;;
+            --sqli) SQLI_TEST=true; shift ;;
+            --auth-test) AUTH_TEST=true; shift ;;
+            --api-scan) API_SECURITY_TEST=true; shift ;;
+            --upload-test) UPLOAD_TEST=true; shift ;;
+            --full-security) FULL_SECURITY_TEST=true; SQLI_TEST=true; AUTH_TEST=true; API_SECURITY_TEST=true; UPLOAD_TEST=true; shift ;;
             --orchestrate) ORCHESTRATED_SCAN=true; shift ;;
             --intel) INTEL_ENRICH=true; shift ;;
             --professional) PROFESSIONAL_REPORT=true; INTEL_ENRICH=true; shift ;;
@@ -484,8 +507,8 @@ deep_scan() {
             "${SCRIPT_DIR}/lib/tool_wrappers/nikto_wrapper.sh" "$TARGET" "$PORT" "$PROTOCOL" \
                 "${REPORT_DIR}/${TARGET}_nikto.txt" "$evasion_level" | tee -a "${REPORT_DIR}/${TARGET}_scan.log"
         else
-            # Standard nikto with timeout to prevent hanging
-            timeout 90 nikto -h "${PROTOCOL}://${TARGET}:${PORT}" -C all -ask no -evasion A 2>&1 \
+            # Standard nikto with extended timeout for remote targets
+            timeout 180 nikto -h "${PROTOCOL}://${TARGET}:${PORT}" -C all -ask no -evasion A 2>&1 \
                 | tee "${REPORT_DIR}/${TARGET}_nikto.txt" || \
                 print_warn "Nikto completed with timeout or warnings"
         fi
@@ -497,8 +520,9 @@ deep_scan() {
     # Uniscan (optional)
     if command_exists uniscan && [[ "$SKIP_CURRENT_TOOL" == "false" ]]; then
         print_running "uniscan - Vulnerability scanner"
-        uniscan -u "${PROTOCOL}://${TARGET}:${PORT}" -qweds 2>&1 \
-            | tee "${REPORT_DIR}/${TARGET}_uniscan.txt"
+        timeout 120 uniscan -u "${PROTOCOL}://${TARGET}:${PORT}" -qweds 2>&1 \
+            | tee "${REPORT_DIR}/${TARGET}_uniscan.txt" || \
+            print_warn "Uniscan completed with timeout or warnings"
     elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
         print_warn "Skipped uniscan"
         SKIP_CURRENT_TOOL=false
@@ -750,6 +774,49 @@ main() {
                 scan_email_compliance "$TARGET" "$compliance_report"
             else
                 print_warn "Email compliance module not loaded"
+            fi
+        fi
+        
+        # Run security tests if requested
+        local base_url="${PROTOCOL}://${TARGET}:${PORT}"
+        
+        if [[ "$SQLI_TEST" == "true" ]] || [[ "$FULL_SECURITY_TEST" == "true" ]]; then
+            echo ""
+            print_info "Running SQL injection tests..."
+            if declare -f scan_sqli &>/dev/null; then
+                scan_sqli "$base_url" "$REPORT_DIR"
+            else
+                print_warn "SQLi scanner module not loaded"
+            fi
+        fi
+        
+        if [[ "$AUTH_TEST" == "true" ]] || [[ "$FULL_SECURITY_TEST" == "true" ]]; then
+            echo ""
+            print_info "Running authentication security tests..."
+            if declare -f scan_authentication &>/dev/null; then
+                scan_authentication "$base_url" "$REPORT_DIR"
+            else
+                print_warn "Auth scanner module not loaded"
+            fi
+        fi
+        
+        if [[ "$API_SECURITY_TEST" == "true" ]] || [[ "$FULL_SECURITY_TEST" == "true" ]]; then
+            echo ""
+            print_info "Running API security tests..."
+            if declare -f scan_api_security &>/dev/null; then
+                scan_api_security "$base_url" "$REPORT_DIR"
+            else
+                print_warn "API scanner module not loaded"
+            fi
+        fi
+        
+        if [[ "$UPLOAD_TEST" == "true" ]] || [[ "$FULL_SECURITY_TEST" == "true" ]]; then
+            echo ""
+            print_info "Running file upload vulnerability tests..."
+            if declare -f scan_file_upload &>/dev/null; then
+                scan_file_upload "$base_url" "$REPORT_DIR"
+            else
+                print_warn "Upload scanner module not loaded"
             fi
         fi
         

@@ -7,10 +7,20 @@
 # Don't exit on error - we want to run all tests
 
 # Configuration
+# Default to localhost for speed - override with args for remote testing
 TEST_TARGET="${1:-127.0.0.1}"
 TEST_PORT="${2:-1234}"
 TEST_DIR="/tmp/waes_test_$(date +%s)"
 WAES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Timeouts - longer for remote targets
+if [[ "$TEST_TARGET" == "127.0.0.1" ]] || [[ "$TEST_TARGET" == "localhost" ]]; then
+    SCAN_TIMEOUT=120
+    DEEP_TIMEOUT=180
+else
+    SCAN_TIMEOUT=600
+    DEEP_TIMEOUT=900
+fi
 
 # Colors
 RED='\033[0;31m'
@@ -140,17 +150,17 @@ test_scan_modes() {
     
     # Full scan (extended timeout)
     run_test "Full Scan Mode" \
-        "cd '$WAES_DIR' && timeout 300 ./waes.sh -u "$TEST_TARGET" -p "$TEST_PORT" -t full --no-evidence" \
+        "cd '$WAES_DIR' && timeout $SCAN_TIMEOUT ./waes.sh -u "$TEST_TARGET" -p "$TEST_PORT" -t full --no-evidence" \
         "$TEST_DIR/test_full_scan.log"
     
     # Deep scan with orchestration
     run_test "Deep Scan with Orchestration" \
-        "cd '$WAES_DIR' && timeout 180 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t deep --orchestrate --no-evidence" \
+        "cd '$WAES_DIR' && timeout $DEEP_TIMEOUT ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t deep --orchestrate --no-evidence" \
         "$TEST_DIR/test_deep_orchestrated.log"
     
     # Advanced scan
     run_test "Advanced Scan Mode" \
-        "cd '$WAES_DIR' && timeout 180 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t advanced --no-evidence" \
+        "cd '$WAES_DIR' && timeout $DEEP_TIMEOUT ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t advanced --no-evidence" \
         "$TEST_DIR/test_advanced.log"
 }
 
