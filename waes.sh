@@ -80,6 +80,14 @@ source "${SCRIPT_DIR}/lib/waf_detector.sh" 2>/dev/null || true
 # shellcheck source=lib/evasion_techniques.sh
 source "${SCRIPT_DIR}/lib/evasion_techniques.sh" 2>/dev/null || true
 
+# New Feature Libraries (Phase 1)
+source "${SCRIPT_DIR}/lib/chain_tracker.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/evidence_collector.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/cvss_calculator.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/writeup_generator.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/exporters/csv_exporter.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/exporters/markdown_exporter.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -98,6 +106,22 @@ GENERATE_JSON=false
 USE_PROFILE=""
 TARGETS_FILE=""
 PARALLEL_MODE=false
+
+# New Feature Flags
+TRACK_CHAINS=false
+EVIDENCE_MODE=false
+GENERATE_WRITEUP=false
+WRITEUP_FORMAT="markdown"
+OWASP_SCAN=false
+API_SCAN=false
+
+# New Feature Flags
+TRACK_CHAINS=false
+EVIDENCE_MODE=false
+GENERATE_WRITEUP=false
+WRITEUP_FORMAT="markdown"
+OWASP_SCAN=false
+API_SCAN=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -130,8 +154,11 @@ handle_interrupt() {
     # Reset counter after 2 seconds
     (sleep 2; CTRL_C_COUNT=0) &
     
-    # Kill current foreground process
-    kill -TERM -$$ 2>/dev/null || true
+    # Kill background jobs (children)
+    jobs -p | xargs -r kill 2>/dev/null || true
+    
+    # Stop any currently running foreground command if possible
+    # We don't use kill -$$ as it kills the script itself
 }
 
 # Set up trap for Ctrl+C
@@ -165,6 +192,9 @@ Options:
     -r              Resume previous scan
     -H              Generate HTML report
     -J              Generate JSON report
+    -w, --writeup   Generate CTF writeup (markdown)
+    -E, --evidence  Enable auto-evidence collection
+    -C, --chains    Enable vulnerability chain tracking
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
@@ -266,6 +296,9 @@ parse_args() {
             -r) RESUME=true; shift ;;
             -H) GENERATE_HTML=true; shift ;;
             -J) GENERATE_JSON=true; shift ;;
+            -w|--writeup) GENERATE_WRITEUP=true; shift ;;
+            -E|--evidence) EVIDENCE_MODE=true; shift ;;
+            -C|--chains) TRACK_CHAINS=true; shift ;;
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
             -h) 
@@ -623,6 +656,17 @@ main() {
             init_scan_state "$TARGET" "$SCAN_TYPE" "$REPORT_DIR"
         fi
         
+        # Initialize new features (Phase 1) - One time per target/port combo
+        if [[ "$TRACK_CHAINS" == "true" ]] && declare -f init_chain_tracking &>/dev/null; then
+            print_info "Vulnerability chain tracking enabled"
+            init_chain_tracking "$TARGET"
+        fi
+        
+        if [[ "$EVIDENCE_MODE" == "true" ]] && declare -f init_evidence_collection &>/dev/null; then
+            print_info "Evidence auto-collection enabled"
+            init_evidence_collection "$TARGET"
+        fi
+        
         echo ""
         
         # Execute scans based on type
@@ -682,6 +726,23 @@ main() {
             generate_html_report "$TARGET" "$REPORT_DIR"
         else
             print_warn "Report generator module not loaded"
+        fi
+    fi
+    
+    # Generate Writeup if requested (Phase 1)
+    if [[ "$GENERATE_WRITEUP" == "true" ]]; then
+        echo ""
+        if declare -f generate_writeup &>/dev/null; then
+            generate_writeup "$TARGET" "$WRITEUP_FORMAT"
+        else
+            print_warn "Writeup generator module not loaded"
+        fi
+    fi
+    
+    # Export CSV if chains or evidence was active (implicit helpfulness)
+    if [[ "$TRACK_CHAINS" == "true" ]] || [[ "$EVIDENCE_MODE" == "true" ]]; then
+        if declare -f export_to_csv &>/dev/null; then
+            export_to_csv "$TARGET" "$REPORT_DIR"
         fi
     fi
     
