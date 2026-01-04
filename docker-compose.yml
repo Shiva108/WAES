@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  waes:
+    build: .
+    image: waes:latest
+    container_name: waes-scanner
+    volumes:
+      - ./report:/opt/waes/report
+      - ./profiles:/opt/waes/profiles
+      - ./plugins:/opt/waes/plugins
+    environment:
+      - WAES_VERSION=1.2.0
+    network_mode: "host"
+    stdin_open: true
+    tty: true
+    
+  # Optional: Redis for team collaboration
+  redis:
+    image: redis:alpine
+    container_name: waes-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+
+# Usage:
+# Start services: docker-compose up -d
+# Run scan: docker-compose run waes -u target.com -t advanced
+# Interactive: docker-compose run waes /bin/bash
+# Stop: docker-compose down
