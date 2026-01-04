@@ -379,7 +379,10 @@ passive_scan() {
     # OSIRA subdomain enum (if available)
     if [[ -x "${SCRIPT_DIR}/external/OSIRA/osira.sh" ]]; then
         print_running "OSIRA - Subdomain enumeration"
-        "${SCRIPT_DIR}/external/OSIRA/osira.sh" -u "${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_osira.txt"
+        "${SCRIPT_DIR}/external/OSIRA/osira.sh" -u "${TARGET}:${PORT}" 2>&1 | \
+            grep -v "Unable to find the required sublis" | \
+            tee "${REPORT_DIR}/${TARGET}_osira.txt" || \
+            print_warn "OSIRA skipped (missing dependencies: sublist3r)"
     fi
 }
 
