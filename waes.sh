@@ -480,9 +480,10 @@ deep_scan() {
             "${SCRIPT_DIR}/lib/tool_wrappers/nikto_wrapper.sh" "$TARGET" "$PORT" "$PROTOCOL" \
                 "${REPORT_DIR}/${TARGET}_nikto.txt" "$evasion_level" | tee -a "${REPORT_DIR}/${TARGET}_scan.log"
         else
-            # Standard nikto
-            nikto -h "${PROTOCOL}://${TARGET}:${PORT}" -C all -ask no -evasion A 2>&1 \
-                | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
+            # Standard nikto with timeout to prevent hanging
+            timeout 90 nikto -h "${PROTOCOL}://${TARGET}:${PORT}" -C all -ask no -evasion A 2>&1 \
+                | tee "${REPORT_DIR}/${TARGET}_nikto.txt" || \
+                print_warn "Nikto completed with timeout or warnings"
         fi
     elif [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
         print_warn "Skipped nikto"
