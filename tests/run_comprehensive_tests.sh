@@ -464,6 +464,57 @@ check_documentation() {
 }
 
 #==============================================================================
+# CLI PARAMETER VERIFICATION
+#==============================================================================
+
+test_cli_options() {
+    echo -e "\n${BLUE}==== 7. CLI PARAMETER VERIFICATION ====${NC}\n"
+    log_info "Verifying all command line arguments and flags"
+
+    # HTTPS flag (-s)
+    run_test "HTTPS Flag (-s)" \
+        "(cd '$WAES_DIR' && timeout 10 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast -s --no-evidence > '$TEST_DIR/test_https.log' 2>&1 || true) && grep -qi 'HTTPS' '$TEST_DIR/test_https.log'" \
+        "$TEST_DIR/test_https.log"
+
+    # Profile support (--profile)
+    run_test "Profile: quick-scan" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' --profile quick-scan --no-evidence > '$TEST_DIR/test_profile.log' 2>&1" \
+        "$TEST_DIR/test_profile.log"
+        
+    # Parallel scanning (--parallel)
+    run_test "Parallel Mode" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast --parallel --no-evidence > '$TEST_DIR/test_parallel.log' 2>&1" \
+        "$TEST_DIR/test_parallel.log"
+
+    # Multiple targets from file (--targets)
+    echo "$TEST_TARGET" > "$TEST_DIR/targets.txt"
+    run_test "Targets File (--targets)" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh --targets '$TEST_DIR/targets.txt' -p '$TEST_PORT' -t fast --no-evidence > '$TEST_DIR/test_targets.log' 2>&1" \
+        "$TEST_DIR/test_targets.log"
+
+    # Report formats (-H, -J)
+    run_test "HTML & JSON Reports" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast -H -J --no-evidence > '$TEST_DIR/test_reports.log' 2>&1" \
+        "$TEST_DIR/test_reports.log"
+        
+    # Verbose mode (-v)
+    run_test "Verbose Mode (-v)" \
+        "cd '$WAES_DIR' && timeout 10 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast -v --no-evidence > '$TEST_DIR/test_verbose.log' 2>&1" \
+        "$TEST_DIR/test_verbose.log"
+
+    # Quiet mode (-q)
+    run_test "Quiet Mode (-q)" \
+        "cd '$WAES_DIR' && timeout 10 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast -q --no-evidence > '$TEST_DIR/test_quiet.log' 2>&1" \
+        "$TEST_DIR/test_quiet.log"
+        
+    # Resume scan (-r)
+    # First ensure a state exists (should be from previous tests), then try resume
+    run_test "Resume Scan (-r)" \
+        "cd '$WAES_DIR' && timeout 10 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -r --no-evidence > '$TEST_DIR/test_resume.log' 2>&1" \
+        "$TEST_DIR/test_resume.log"
+}
+
+#==============================================================================
 # RESULTS ANALYSIS
 #==============================================================================
 
@@ -625,10 +676,78 @@ EOF
     test_performance            # 4. Performance Assessment
     test_error_handling         # 5. Error Handling
     test_compliance             # 6. Compliance Checks
+    test_cli_options            # 7. CLI Verification
     
+    # Analyze and report
+#==============================================================================
+# AI REMEDIATION CONTEXT GENERATION
+#==============================================================================
+
+generate_ai_context() {
+    local context_file="$TEST_DIR/ai_fix_context.md"
+    
+    cat > "$context_file" <<EOF
+# WAES Test Failure Remediation Context
+
+## Overview
+This file is auto-generated to help AI assistants diagnose and fix test failures.
+
+**Test Date:** $(date)
+**Target:** http://${TEST_TARGET}:${TEST_PORT}
+**Failed Tests:** ${FAILED_TESTS}
+
+## Failed Test Analysis
+
+EOF
+    
+    # Iterate over logs and find failures
+    # We rely on the fact that failed tests have logs in the directory
+    # and we can check which ones failed by parsing our own output or checking return codes
+    # For simplicity here, we grep the summary or check logs with errors
+    
+    if (( FAILED_TESTS > 0 )); then
+        echo "Analyzing failed test logs..." >> "$context_file"
+        
+        # We need to know WHICH tests failed. The script tracks count but not names explicitly in an array.
+        # Let's inspect all logs for keywords or just dump logs of tests that likely failed.
+        # Better approach: The run_test function knows. But we are post-execution.
+        # We will scan all logs for "fail" or error patterns, or just include all logs if failure count > 0.
+        
+        for log in "$TEST_DIR"/*.log; do
+            [[ -f "$log" ]] || continue
+            
+            # Simple heuristic: if log contains "fail" or "error" (case insensitive) context, include it
+            # Or if it's small (crash) or huge (timeout output).
+            # Actually, let's just include the tail of ALL logs if we are in failure mode, 
+            # or specifically look for the ones that `run_test` failed.
+            
+            # Since we can't easily map back from here without global arrays of failed tests,
+            # we will look for specific error indicators we logged or just provide identifying info.
+            
+            cat >> "$context_file" <<INNER_EOF
+
+### Log: $(basename "$log")
+\`\`\`text
+$(tail -n 50 "$log" | sed 's/\x1b\[[0-9;]*m//g')
+\`\`\`
+INNER_EOF
+        done
+        
+        echo -e "\n## Instructions for AI" >> "$context_file"
+        echo "1. Analyze the log snippets above for errors (timeouts, missing dependencies, syntax errors)." >> "$context_file"
+        echo "2. Check 'tests/run_comprehensive_tests.sh' logic for the failing tests." >> "$context_file"
+        echo "3. Propose fixes for either the codebase or the test script." >> "$context_file"
+        
+        echo -e "${YELLOW}[AI-CONTEXT]${NC} Generated fix context: $context_file"
+    else
+        echo "No failures detected." >> "$context_file"
+    fi
+}
+
     # Analyze and report
     analyze_results
     generate_summary
+    generate_ai_context
     
     # Exit with appropriate code
     if (( FAILED_TESTS > 5 )); then
