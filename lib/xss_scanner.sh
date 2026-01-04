@@ -125,7 +125,7 @@ test_xss_forms() {
     
     # Extract form action URLs
     local forms
-    forms=$(echo "$page_content" | grep -oP '(?<=<form[^>]*action=")[^"]*' | head -10)
+    forms=$(echo "$page_content" | grep -i '<form' | sed -n 's/.*action="\([^"]*\)".*/\1/p' | head -10)
     
     if [[ -z "$forms" ]]; then
         print_info "No forms found on page"
@@ -138,7 +138,7 @@ test_xss_forms() {
     
     # Extract input fields
     local inputs
-    inputs=$(echo "$page_content" | grep -oP '(?<=<input[^>]*name=")[^"]*' | head -20)
+    inputs=$(echo "$page_content" | grep -i '<input' | sed -n 's/.*name="\([^"]*\)".*/\1/p' | head -20)
     
     echo "Input fields found:" | tee -a "$output_file"
     echo "$inputs" | tee -a "$output_file"
