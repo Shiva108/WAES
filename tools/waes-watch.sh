@@ -7,8 +7,12 @@
 set -euo pipefail
 
 # Source color library if available
-if [[ -f "${SCRIPT_DIR:-$(dirname "$0")}/lib/colors.sh" ]]; then
-    source "${SCRIPT_DIR:-$(dirname "$0")}/lib/colors.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Source color library if available
+if [[ -f "${ROOT_DIR}/lib/colors.sh" ]]; then
+    source "${ROOT_DIR}/lib/colors.sh"
 else
     print_info() { echo "[*] $*"; }
     print_success() { echo "[+] $*"; }
@@ -31,13 +35,13 @@ create_baseline() {
     mkdir -p "$baseline_dir"
     
     # Run initial scan
-    if [[ -x "./waes.sh" ]]; then
-        sudo ./waes.sh -u "$target" -t "$scan_type" -J 2>&1 | \
+    if [[ -x "${ROOT_DIR}/waes.sh" ]]; then
+        sudo "${ROOT_DIR}/waes.sh" -u "$target" -t "$scan_type" -J 2>&1 | \
             tee "${baseline_dir}/${target}_baseline.log"
         
         # Copy JSON result as baseline
-        if [[ -f "report/${target}_report.json" ]]; then
-            cp "report/${target}_report.json" "${baseline_dir}/${target}_baseline.json"
+        if [[ -f "${ROOT_DIR}/report/${target}_report.json" ]]; then
+            cp "${ROOT_DIR}/report/${target}_report.json" "${baseline_dir}/${target}_baseline.json"
             print_success "Baseline created: ${baseline_dir}/${target}_baseline.json"
         fi
     fi
@@ -111,13 +115,13 @@ watch_target() {
         print_info "Scan #$scan_count - $(date '+%Y-%m-%d %H:%M:%S')"
         
         # Run scan
-        if [[ -x "./waes.sh" ]]; then
-            sudo ./waes.sh -u "$target" -t "$scan_type" -J -q 2>&1 | \
+        if [[ -x "${ROOT_DIR}/waes.sh" ]]; then
+            sudo "${ROOT_DIR}/waes.sh" -u "$target" -t "$scan_type" -J -q 2>&1 | \
                 tee "${monitor_dir}/${target}_scan_${scan_count}.log" >/dev/null
             
             # Compare with baseline
-            if [[ -f "report/${target}_report.json" ]]; then
-                local current_scan="report/${target}_report.json"
+            if [[ -f "${ROOT_DIR}/report/${target}_report.json" ]]; then
+                local current_scan="${ROOT_DIR}/report/${target}_report.json"
                 local baseline_scan="${baseline_dir}/${target}_baseline.json"
                 local diff_file="${monitor_dir}/${target}_diff_${scan_count}.txt"
                 
@@ -145,8 +149,7 @@ schedule_scan() {
     
     local script_path
     script_path=$(realpath "$0")
-    local waes_dir
-    waes_dir=$(dirname "$script_path")
+    local waes_dir="$ROOT_DIR"
     
     local cron_job="$cron_expr cd $waes_dir && sudo ./waes.sh -u $target -t $scan_type -J >> monitoring/${target}_cron.log 2>&1"
     

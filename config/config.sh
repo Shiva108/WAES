@@ -6,7 +6,8 @@
 readonly WAES_VERSION="1.0.0"
 
 # Script directory (auto-detected)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Script directory (root of the repository)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 #==============================================================================
 # DIRECTORIES
@@ -17,14 +18,14 @@ REPORT_DIR="${SCRIPT_DIR}/report"
 
 # Wordlist directories (in priority order)
 WORDLIST_DIRS=(
-    "${SCRIPT_DIR}/SecLists/Discovery/Web-Content"
+    "${SCRIPT_DIR}/external/SecLists/Discovery/Web-Content"
     "/usr/share/wordlists/seclists/Discovery/Web-Content"
     "/usr/share/seclists/Discovery/Web-Content"
     "/usr/share/wordlists/dirbuster"
 )
 
 # Vulscan directory
-VULSCAN_DIR="${SCRIPT_DIR}/vulscan"
+VULSCAN_DIR="${SCRIPT_DIR}/external/vulscan"
 
 #==============================================================================
 # DEFAULT SETTINGS

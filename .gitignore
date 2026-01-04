@@ -14,8 +14,8 @@ monitoring/
 *.txt.bak
 
 # Empty/incomplete submodules
-dirble/
-pywhatcms/
+external/dirble/
+external/pywhatcms/
 
 # Python cache (explicitly listed)
 __pycache__/
@@ -42,7 +42,7 @@ __pycache__/
 *_report.md
 
 # Test results
-test_results/
+tests/test_results/
 test_output.txt
 
 #==============================================================================
@@ -262,11 +262,10 @@ my_targets.txt
 
 # Large wordlists (if not in repo)
 wordlists/
-SecLists/
-vulscan/
+external/SecLists/
+external/vulscan/
 
 # Downloaded tools
-tools/
 bin/
 
 # Personal notes
@@ -276,9 +275,9 @@ NOTES.md
 
 # Foreign/External Git Repositories
 # These are cloned or downloaded as dependencies
-SecLists/
-vulscan/
-OSIRA/
+external/SecLists/
+external/vulscan/
+external/OSIRA/
 nmap-vulners/
 vulners-nse-scripts/
 exploit-database/

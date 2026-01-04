@@ -4,7 +4,7 @@
 # Comprehensive automated testing for all WAES components
 #==============================================================================
 
-set -e
+# set -e
 
 # Colors
 RED='\033[0;31m'
@@ -14,6 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TEST_DIR="${SCRIPT_DIR}/test_results"
 TEST_COUNT=0
 PASS_COUNT=0
@@ -49,10 +50,10 @@ test_syntax() {
     
     local scripts=(
         "waes.sh"
-        "supergobuster.sh"
+        "tools/supergobuster.sh"
         "install.sh"
-        "cleanrf.sh"
-        "config.sh"
+        "tools/cleanrf.sh"
+        "config/config.sh"
         "lib/colors.sh"
         "lib/validation.sh"
         "lib/progress.sh"
@@ -65,7 +66,7 @@ test_syntax() {
     
     for script in "${scripts[@]}"; do
         ((TEST_COUNT++))
-        if bash -n "${SCRIPT_DIR}/${script}" 2>/dev/null; then
+        if bash -n "${ROOT_DIR}/${script}" 2>/dev/null; then
             log_pass "Syntax: $script"
         else
             log_fail "Syntax: $script"
@@ -74,7 +75,7 @@ test_syntax() {
     
     # Python script
     ((TEST_COUNT++))
-    if python3 -m py_compile "${SCRIPT_DIR}/resolveip.py" 2>/dev/null; then
+    if python3 -m py_compile "${ROOT_DIR}/tools/resolveip.py" 2>/dev/null; then
         log_pass "Syntax: resolveip.py"
     else
         log_fail "Syntax: resolveip.py"
@@ -90,7 +91,7 @@ test_help_flags() {
     
     # supergobuster
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/supergobuster.sh" -h 2>&1 | grep -q "Usage:"; then
+    if "${ROOT_DIR}/tools/supergobuster.sh" -h 2>&1 | grep -q "Usage:"; then
         log_pass "Help: supergobuster.sh"
     else
         log_fail "Help: supergobuster.sh"
@@ -98,7 +99,7 @@ test_help_flags() {
     
     # cleanrf
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/cleanrf.sh" -h 2>&1 | grep -q "Usage:"; then
+    if "${ROOT_DIR}/tools/cleanrf.sh" -h 2>&1 | grep -q "Usage:"; then
         log_pass "Help: cleanrf.sh"
     else
         log_fail "Help: cleanrf.sh"
@@ -106,7 +107,7 @@ test_help_flags() {
     
     # resolveip
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/resolveip.py" -h 2>&1 | grep -q "usage:"; then
+    if "${ROOT_DIR}/tools/resolveip.py" -h 2>&1 | grep -q "usage:"; then
         log_pass "Help: resolveip.py"
     else
         log_fail "Help: resolveip.py"
@@ -114,7 +115,7 @@ test_help_flags() {
     
     # state_manager
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/lib/state_manager.sh" 2>&1 | grep -q "Usage:"; then
+    if "${ROOT_DIR}/lib/state_manager.sh" 2>&1 | grep -q "Usage:"; then
         log_pass "Help: state_manager.sh"
     else
         log_fail "Help: state_manager.sh"
@@ -133,7 +134,7 @@ test_resolveip() {
     
     # Test plain output
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/resolveip.py" "${TEST_DIR}/test_domains.txt" -q 2>/dev/null | grep -q "127.0.0.1"; then
+    if "${ROOT_DIR}/tools/resolveip.py" "${TEST_DIR}/test_domains.txt" -q 2>/dev/null | grep -q "127.0.0.1"; then
         log_pass "resolveip: plain output"
     else
         log_fail "resolveip: plain output"
@@ -141,7 +142,7 @@ test_resolveip() {
     
     # Test JSON output
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/resolveip.py" "${TEST_DIR}/test_domains.txt" -f json -q 2>/dev/null | grep -q '"domain"'; then
+    if "${ROOT_DIR}/tools/resolveip.py" "${TEST_DIR}/test_domains.txt" -f json -q 2>/dev/null | grep -q '"domain"'; then
         log_pass "resolveip: JSON output"
     else
         log_fail "resolveip: JSON output"
@@ -149,7 +150,7 @@ test_resolveip() {
     
     # Test CSV output
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/resolveip.py" "${TEST_DIR}/test_domains.txt" -f csv -q 2>/dev/null | grep -q "domain,ip,error"; then
+    if "${ROOT_DIR}/tools/resolveip.py" "${TEST_DIR}/test_domains.txt" -f csv -q 2>/dev/null | grep -q "domain,ip,error"; then
         log_pass "resolveip: CSV output"
     else
         log_fail "resolveip: CSV output"
@@ -161,7 +162,7 @@ test_state_manager() {
     
     # Init state
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/lib/state_manager.sh" init "test.localhost" "full" "${TEST_DIR}" 2>/dev/null; then
+    if "${ROOT_DIR}/lib/state_manager.sh" init "test.localhost" "full" "${TEST_DIR}" 2>/dev/null; then
         log_pass "state_manager: init"
     else
         log_fail "state_manager: init"
@@ -177,7 +178,7 @@ test_state_manager() {
     
     # Status command
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/lib/state_manager.sh" status "test.localhost" "${TEST_DIR}" 2>/dev/null | grep -q "Status:"; then
+    if "${ROOT_DIR}/lib/state_manager.sh" status "test.localhost" "${TEST_DIR}" 2>/dev/null | grep -q "Status:"; then
         log_pass "state_manager: status"
     else
         log_fail "state_manager: status"
@@ -185,7 +186,7 @@ test_state_manager() {
     
     # List command
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/lib/state_manager.sh" list "${TEST_DIR}" 2>/dev/null | grep -q "test.localhost"; then
+    if "${ROOT_DIR}/lib/state_manager.sh" list "${TEST_DIR}" 2>/dev/null | grep -q "test.localhost"; then
         log_pass "state_manager: list"
     else
         log_fail "state_manager: list"
@@ -197,7 +198,7 @@ test_cleanrf() {
     
     # Dry run (should not delete)
     ((TEST_COUNT++))
-    if "${SCRIPT_DIR}/cleanrf.sh" --dry-run 2>/dev/null | grep -q "Dry run mode"; then
+    if "${ROOT_DIR}/tools/cleanrf.sh" --dry-run 2>/dev/null | grep -q "Dry run mode"; then
         log_pass "cleanrf: dry-run mode"
     else
         log_fail "cleanrf: dry-run mode"
@@ -209,7 +210,7 @@ test_library_functions() {
     
     # Source colors library
     ((TEST_COUNT++))
-    if source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null; then
+    if source "${ROOT_DIR}/lib/colors.sh" 2>/dev/null; then
         log_pass "Library: colors.sh loads"
     else
         log_fail "Library: colors.sh loads"
@@ -217,14 +218,14 @@ test_library_functions() {
     
     # Source validation library
     ((TEST_COUNT++))
-    if source "${SCRIPT_DIR}/lib/validation.sh" 2>/dev/null; then
+    if source "${ROOT_DIR}/lib/validation.sh" 2>/dev/null; then
         log_pass "Library: validation.sh loads"
     else
         log_fail "Library: validation.sh loads"
     fi
     
     # Test validation functions
-    source "${SCRIPT_DIR}/lib/validation.sh" 2>/dev/null
+    source "${ROOT_DIR}/lib/validation.sh" 2>/dev/null
     
     ((TEST_COUNT++))
     if validate_ipv4 "192.168.1.1"; then
@@ -263,7 +264,7 @@ test_config_loading() {
     log_test "Configuration loading tests"
     
     ((TEST_COUNT++))
-    if source "${SCRIPT_DIR}/config.sh" 2>/dev/null; then
+    if source "${ROOT_DIR}/config/config.sh" 2>/dev/null; then
         log_pass "Config: loads successfully"
     else
         log_fail "Config: loads successfully"

@@ -17,10 +17,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Source configuration and libraries
 # shellcheck source=config.sh
-source "${SCRIPT_DIR}/config.sh" 2>/dev/null || {
-    echo "[!] Warning: config.sh not found, using defaults"
+source "${SCRIPT_DIR}/config/config.sh" 2>/dev/null || {
+    echo "[!] Warning: config/config.sh not found, using defaults"
     REPORT_DIR="${SCRIPT_DIR}/report"
-    VULSCAN_DIR="${SCRIPT_DIR}/vulscan"
+    VULSCAN_DIR="${SCRIPT_DIR}/external/vulscan"
 }
 
 # shellcheck source=lib/colors.sh
@@ -271,9 +271,9 @@ passive_scan() {
     fi
     
     # OSIRA subdomain enum (if available)
-    if [[ -x "${SCRIPT_DIR}/OSIRA/osira.sh" ]]; then
+    if [[ -x "${SCRIPT_DIR}/external/OSIRA/osira.sh" ]]; then
         print_running "OSIRA - Subdomain enumeration"
-        "${SCRIPT_DIR}/OSIRA/osira.sh" -u "${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_osira.txt"
+        "${SCRIPT_DIR}/external/OSIRA/osira.sh" -u "${TARGET}:${PORT}" 2>&1 | tee "${REPORT_DIR}/${TARGET}_osira.txt"
     fi
 }
 
@@ -337,9 +337,9 @@ fuzzing_scan() {
     local base_url="${PROTOCOL}://${TARGET}:${PORT}"
     
     # Run supergobuster if available
-    if [[ -x "${SCRIPT_DIR}/supergobuster.sh" ]]; then
+    if [[ -x "${SCRIPT_DIR}/tools/supergobuster.sh" ]]; then
         print_running "supergobuster - Multi-wordlist directory busting"
-        "${SCRIPT_DIR}/supergobuster.sh" "$base_url" 2>&1 \
+        "${SCRIPT_DIR}/tools/supergobuster.sh" "$base_url" 2>&1 \
             | tee "${REPORT_DIR}/${TARGET}_supergobust.txt"
     elif command_exists gobuster; then
         # Fall back to simple gobuster

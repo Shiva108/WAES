@@ -127,30 +127,34 @@ setup_directories() {
     # Create lib directory
     mkdir -p "${SCRIPT_DIR}/lib"
     log_success "Created lib directory"
+    
+    # Create external directory
+    mkdir -p "${SCRIPT_DIR}/external"
+    log_success "Created external directory"
 }
 
 clone_dependencies() {
     log_info "Cloning/updating dependencies..."
     
     # SecLists
-    if [[ -d "${SCRIPT_DIR}/SecLists/.git" ]]; then
+    if [[ -d "${SCRIPT_DIR}/external/SecLists/.git" ]]; then
         log_info "Updating SecLists..."
-        cd "${SCRIPT_DIR}/SecLists" && git pull --quiet
-    elif [[ ! -d "${SCRIPT_DIR}/SecLists" ]] || [[ -z "$(ls -A "${SCRIPT_DIR}/SecLists" 2>/dev/null)" ]]; then
+        cd "${SCRIPT_DIR}/external/SecLists" && git pull --quiet
+    elif [[ ! -d "${SCRIPT_DIR}/external/SecLists" ]] || [[ -z "$(ls -A "${SCRIPT_DIR}/external/SecLists" 2>/dev/null)" ]]; then
         log_info "Cloning SecLists (this may take a while)..."
-        git clone --depth 1 https://github.com/danielmiessler/SecLists.git "${SCRIPT_DIR}/SecLists"
+        git clone --depth 1 https://github.com/danielmiessler/SecLists.git "${SCRIPT_DIR}/external/SecLists"
     else
         log_success "SecLists already present"
     fi
     
     # Vulscan
-    if [[ -d "${SCRIPT_DIR}/vulscan/.git" ]]; then
+    if [[ -d "${SCRIPT_DIR}/external/vulscan/.git" ]]; then
         log_info "Updating vulscan..."
-        cd "${SCRIPT_DIR}/vulscan" && git pull --quiet
-    elif [[ ! -d "${SCRIPT_DIR}/vulscan" ]] || [[ ! -f "${SCRIPT_DIR}/vulscan/vulscan.nse" ]]; then
+        cd "${SCRIPT_DIR}/external/vulscan" && git pull --quiet
+    elif [[ ! -d "${SCRIPT_DIR}/external/vulscan" ]] || [[ ! -f "${SCRIPT_DIR}/external/vulscan/vulscan.nse" ]]; then
         log_info "Cloning vulscan..."
-        rm -rf "${SCRIPT_DIR}/vulscan"
-        git clone https://github.com/scipag/vulscan.git "${SCRIPT_DIR}/vulscan"
+        rm -rf "${SCRIPT_DIR}/external/vulscan"
+        git clone https://github.com/scipag/vulscan.git "${SCRIPT_DIR}/external/vulscan"
     else
         log_success "Vulscan already present"
     fi
@@ -169,9 +173,9 @@ set_permissions() {
     log_info "Setting script permissions..."
     
     chmod +x "${SCRIPT_DIR}/waes.sh" 2>/dev/null || true
-    chmod +x "${SCRIPT_DIR}/supergobuster.sh" 2>/dev/null || true
-    chmod +x "${SCRIPT_DIR}/cleanrf.sh" 2>/dev/null || true
-    chmod +x "${SCRIPT_DIR}/resolveip.py" 2>/dev/null || true
+    chmod +x "${SCRIPT_DIR}/tools/supergobuster.sh" 2>/dev/null || true
+    chmod +x "${SCRIPT_DIR}/tools/cleanrf.sh" 2>/dev/null || true
+    chmod +x "${SCRIPT_DIR}/tools/resolveip.py" 2>/dev/null || true
     
     log_success "Permissions set"
 }
@@ -197,8 +201,8 @@ verify_installation() {
     echo ""
     
     # Check directories
-    [[ -d "${SCRIPT_DIR}/SecLists" ]] && log_success "SecLists: OK" || log_warn "SecLists: Missing"
-    [[ -f "${SCRIPT_DIR}/vulscan/vulscan.nse" ]] && log_success "Vulscan: OK" || log_warn "Vulscan: Missing"
+    [[ -d "${SCRIPT_DIR}/external/SecLists" ]] && log_success "SecLists: OK" || log_warn "SecLists: Missing"
+    [[ -f "${SCRIPT_DIR}/external/vulscan/vulscan.nse" ]] && log_success "Vulscan: OK" || log_warn "Vulscan: Missing"
     [[ -d "${SCRIPT_DIR}/report" ]] && log_success "Report dir: OK" || log_warn "Report dir: Missing"
     
     echo ""

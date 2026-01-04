@@ -7,7 +7,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPORT_DIR="${SCRIPT_DIR}/report"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+REPORT_DIR="${ROOT_DIR}/report"
 
 # Colors
 RED='\033[0;31m'
