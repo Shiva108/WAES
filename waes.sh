@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #==============================================================================
 # WAES - Web Auto Enum & Scanner
-# 2018-2024 by Shiva @ CPH:SEC
+# 2018-2026 by Shiva @ CPH:SEC
 #
 # A comprehensive web enumeration toolkit for CTF and penetration testing
 # GitHub: https://github.com/Shiva108/WAES
@@ -79,8 +79,9 @@ source "${SCRIPT_DIR}/lib/parallel_scan.sh" 2>/dev/null || true
 
 VERSION="${WAES_VERSION:-1.2.0}"
 TARGET=""
-PORT="${DEFAULT_HTTP_PORT:-80}"
-PROTOCOL="${DEFAULT_PROTOCOL:-http}"
+PORT=""
+PORTS=(80 443)  # Default: scan both HTTP and HTTPS
+PROTOCOL=""
 SCAN_TYPE="full"
 VERBOSE=false
 QUIET=false
@@ -116,7 +117,7 @@ Usage: ${0##*/} [OPTIONS] -u <target>
 
 Options:
     -u <target>     Target IP or domain (required, or use --targets)
-    -p <port>       Port number (default: 80, or 443 with -s)
+    -p <port>       Port number (default: 80 and 443)
     -s              Use HTTPS protocol
     -t <type>       Scan type: fast, full, deep, advanced (default: full)
     --profile <p>   Use scan profile (ctf-box, web-app, bug-bounty, quick-scan)
@@ -190,15 +191,33 @@ setup_report_dir() {
     fi
 }
 
+detect_https() {
+    local target="$1"
+    local port="$2"
+    
+    # Try to connect with SSL/TLS using timeout
+    if command_exists openssl; then
+        if timeout 3 openssl s_client -connect "${target}:${port}" -servername "${target}" </dev/null 2>/dev/null | grep -q "CONNECTED"; then
+            return 0  # HTTPS detected
+        fi
+    elif command_exists curl; then
+        if timeout 3 curl -k -s "https://${target}:${port}" >/dev/null 2>&1; then
+            return 0  # HTTPS detected
+        fi
+    fi
+    
+    return 1  # Not HTTPS
+}
+
 parse_args() {
     # Support long options
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -u) TARGET="$2"; shift 2 ;;
-            -p) PORT="$2"; shift 2 ;;
+            -p) PORT="$2"; PORTS=("$PORT"); shift 2 ;;
             -s) 
                 PROTOCOL="https"
-                [[ "$PORT" == "80" ]] && PORT="443"
+                PORTS=(443)
                 shift
                 ;;
             -t) SCAN_TYPE="$2"; shift 2 ;;
@@ -240,11 +259,13 @@ parse_args() {
         exit 1
     fi
     
-    # Validate port
-    if ! validate_port "$PORT"; then
-        print_error "Invalid port: $PORT (must be 1-65535)"
-        exit 1
-    fi
+    # Validate port(s)
+    for p in "${PORTS[@]}"; do
+        if ! validate_port "$p"; then
+            print_error "Invalid port: $p (must be 1-65535)"
+            exit 1
+        fi
+    done
     
     # Validate scan type
     case "$SCAN_TYPE" in
@@ -466,64 +487,82 @@ main() {
         fi
     fi
     
-    # Display target info
-    print_info "Target: ${PROTOCOL}://${TARGET}:${PORT}"
-    print_info "Scan type: ${SCAN_TYPE}"
-    
-    # Setup
-    check_tools
-    setup_report_dir
-    
-    # Initialize scan state
-    if declare -f init_scan_state &>/dev/null; then
-        init_scan_state "$TARGET" "$SCAN_TYPE" "$REPORT_DIR"
-    fi
-    
-    echo ""
-    
-    # Execute scans based on type
-    case "$SCAN_TYPE" in
-        fast)
-            fast_scan
-            [[ -f mark_stage_completed ]] && mark_stage_completed "$TARGET" "$REPORT_DIR" "fast_scan"
-            ;;
-        full)
-            fast_scan
-            deep_scan
-            standard_scan
-            ;;
-        deep)
-            passive_scan
-            fast_scan
-            deep_scan
-            fuzzing_scan
-            standard_scan
-            ;;
-        advanced)
-            passive_scan
-            fast_scan
-            deep_scan
-            fuzzing_scan
-            standard_scan
-            ssl_tls_scan
-    
-    # Generate JSON report if requested
-    if [[ "$GENERATE_JSON" == "true" ]]; then
-        echo ""
-        print_info "Generating JSON report..."
-        if declare -f export_to_json &>/dev/null; then
-            export_to_json "$TARGET" "$REPORT_DIR" "$SCAN_TYPE"
+    # Scan each port
+    for PORT in "${PORTS[@]}"; do
+        # Auto-detect protocol if not explicitly set with -s flag
+        if [[ -z "$PROTOCOL" ]]; then
+            print_info "Testing port ${PORT} for SSL/TLS..."
+            if detect_https "$TARGET" "$PORT"; then
+                PROTOCOL="https"
+                print_success "HTTPS detected on port ${PORT}"
+            else
+                PROTOCOL="http"
+                print_info "Using HTTP for port ${PORT}"
+            fi
         fi
-    fi
-            xss_vulnerability_scan
-            cms_detection_scan
-            ;;
-    esac
-    
-    # Mark scan as complete
-    if declare -f complete_scan &>/dev/null; then
-        complete_scan "$TARGET" "$REPORT_DIR"
-    fi
+        
+        # Display target info
+        print_info "Scanning: ${PROTOCOL}://${TARGET}:${PORT}"
+        print_info "Scan type: ${SCAN_TYPE}"
+        
+        # Setup
+        check_tools
+        setup_report_dir
+        
+        # Initialize scan state
+        if declare -f init_scan_state &>/dev/null; then
+            init_scan_state "$TARGET" "$SCAN_TYPE" "$REPORT_DIR"
+        fi
+        
+        echo ""
+        
+        # Execute scans based on type
+        case "$SCAN_TYPE" in
+            fast)
+                fast_scan
+                [[ -f mark_stage_completed ]] && mark_stage_completed "$TARGET" "$REPORT_DIR" "fast_scan"
+                ;;
+            full)
+                fast_scan
+                deep_scan
+                standard_scan
+                ;;
+            deep)
+                passive_scan
+                fast_scan
+                deep_scan
+                fuzzing_scan
+                standard_scan
+                ;;
+            advanced)
+                passive_scan
+                fast_scan
+                deep_scan
+                fuzzing_scan
+                standard_scan
+                ssl_tls_scan
+                
+                # Generate JSON report if requested
+                if [[ "$GENERATE_JSON" == "true" ]]; then
+                    echo ""
+                    print_info "Generating JSON report..."
+                    if declare -f export_to_json &>/dev/null; then
+                        export_to_json "$TARGET" "$REPORT_DIR" "$SCAN_TYPE"
+                    fi
+                fi
+                xss_vulnerability_scan
+                cms_detection_scan
+                ;;
+        esac
+        
+        # Mark scan as complete
+        if declare -f complete_scan &>/dev/null; then
+            complete_scan "$TARGET" "$REPORT_DIR"
+        fi
+        
+        # Reset protocol for next port iteration
+        PROTOCOL=""
+    done
     
     # Generate HTML report if requested
     if [[ "$GENERATE_HTML" == "true" ]]; then
