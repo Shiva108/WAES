@@ -71,8 +71,12 @@ update_scan_state() {
     local temp_file="${state_file}.tmp"
     
     if command -v jq &>/dev/null; then
-        jq --arg field "$field" --arg value "$value" \
-            '. + {($field): $value, "last_update": "'$(date '+%Y-%m-%d %H:%M:%S')'"}' \
+        local temp_file="${state_file}.tmp"
+        local timestamp
+        timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        
+        jq --arg field "$field" --arg value "$value" --arg ts "$timestamp" \
+            '. + {($field): $value, "last_update": $ts}' \
             "$state_file" > "$temp_file" && mv "$temp_file" "$state_file"
     else
         # Fallback without jq
@@ -92,8 +96,11 @@ mark_stage_completed() {
     
     if command -v jq &>/dev/null; then
         local temp_file="${state_file}.tmp"
-        jq --arg stage "$stage_name" \
-            '.completed_stages += [$stage] | .last_update = "'$(date '+%Y-%m-%d %H:%M:%S')'"' \
+        local timestamp
+        timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        
+        jq --arg stage "$stage_name" --arg ts "$timestamp" \
+            '.completed_stages += [$stage] | .last_update = $ts' \
             "$state_file" > "$temp_file" && mv "$temp_file" "$state_file"
     fi
     
@@ -111,8 +118,11 @@ add_error() {
     
     if command -v jq &>/dev/null; then
         local temp_file="${state_file}.tmp"
-        jq --arg error "$error_msg" \
-            '.errors += [$error] | .last_update = "'$(date '+%Y-%m-%d %H:%M:%S')'"' \
+        local timestamp
+        timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        
+        jq --arg error "$error_msg" --arg ts "$timestamp" \
+            '.errors += [$error] | .last_update = $ts' \
             "$state_file" > "$temp_file" && mv "$temp_file" "$state_file"
     fi
     

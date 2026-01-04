@@ -5,6 +5,10 @@
 # WAES-Specific Directories
 #==============================================================================
 
+.idea/
+__pycache__/
+external/
+
 # Scan reports and results
 report/
 reports/
@@ -282,3 +286,4 @@ nmap-vulners/
 vulners-nse-scripts/
 exploit-database/
 PayloadsAllTheThings/
+lib/state_manager.sh

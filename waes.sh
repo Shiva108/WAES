@@ -105,6 +105,38 @@ REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
 # Nmap HTTP scripts
 HTTPNSE="http-date,http-title,http-server-header,http-headers,http-enum,http-devframework,http-dombased-xss,http-stored-xss,http-xssed,http-cookie-flags,http-errors,http-grep,http-traceroute"
 
+# Skip flag for tool interruption
+SKIP_CURRENT_TOOL=false
+CTRL_C_COUNT=0
+
+#==============================================================================
+# SIGNAL HANDLERS
+#==============================================================================
+
+handle_interrupt() {
+    ((CTRL_C_COUNT++))
+    
+    if (( CTRL_C_COUNT >= 2 )); then
+        echo ""
+        print_error "Double Ctrl+C detected. Exiting WAES..."
+        exit 130
+    fi
+    
+    echo ""
+    print_warn "Ctrl+C detected - Skipping current tool..."
+    print_info "(Press Ctrl+C again within 2 seconds to exit completely)"
+    SKIP_CURRENT_TOOL=true
+    
+    # Reset counter after 2 seconds
+    (sleep 2; CTRL_C_COUNT=0) &
+    
+    # Kill current foreground process
+    kill -TERM -$$ 2>/dev/null || true
+}
+
+# Set up trap for Ctrl+C
+trap handle_interrupt SIGINT
+
 #==============================================================================
 # BANNER & USAGE
 #==============================================================================
@@ -314,11 +346,18 @@ fast_scan() {
         print_running "wafw00f - Web Application Firewall detection"
         local waf_result="${REPORT_DIR}/${TARGET}_wafw00f.txt"
         
-        # Run WAF detection
-        if detect_waf "$TARGET" "$PORT" "$PROTOCOL" "$waf_result" 2>&1 | tee -a "${REPORT_DIR}/${TARGET}_scan.log"; then
-            # Parse results and load evasion profile
-            WAF_NAME=$(parse_waf_result "$waf_result")
-            WAF_CONFIDENCE=$(get_waf_confidence "$waf_result")
+        # Run WAF detection (non-blocking - continue regardless of result)
+        detect_waf "$TARGET" "$PORT" "$PROTOCOL" "$waf_result" 2>&1 | tee -a "${REPORT_DIR}/${TARGET}_scan.log" || true
+        
+        # Check if skipped
+        if [[ "$SKIP_CURRENT_TOOL" == "true" ]]; then
+            print_warn "Skipped wafw00f"
+            SKIP_CURRENT_TOOL=false
+            export WAF_DETECTED=false
+        else
+            # Parse results and load evasion profile if available
+            WAF_NAME=$(parse_waf_result "$waf_result" 2>/dev/null) || WAF_NAME="none"
+            WAF_CONFIDENCE=$(get_waf_confidence "$waf_result" 2>/dev/null) || WAF_CONFIDENCE="0"
             
             if [[ "$WAF_NAME" != "none" ]]; then
                 print_warn "WAF DETECTED: $WAF_NAME (Confidence: ${WAF_CONFIDENCE}%)"
@@ -333,7 +372,7 @@ fast_scan() {
                 print_info "Loading evasion profile: $(basename "$WAF_PROFILE" .yml)"
                 
                 # Generate summary
-                generate_waf_summary "$TARGET" "$waf_result" "${REPORT_DIR}/${TARGET}_waf_summary.txt"
+                generate_waf_summary "$TARGET" "$waf_result" "${REPORT_DIR}/${TARGET}_waf_summary.txt" 2>/dev/null || true
             else
                 print_success "No WAF detected - proceeding with standard scanning"
                 export WAF_DETECTED=false
@@ -341,11 +380,12 @@ fast_scan() {
         fi
     fi
     
-    # Quick nmap http-enum
-    if command_exists nmap; then
-        print_running "nmap - HTTP enumeration script"
+    # Quick nmap http-enum (parallel)
+    if command_exists nmap && [[ "$SKIP_CURRENT_TOOL" == "false" ]]; then
+        print_running "nmap - HTTP enumeration script (running in background)"
         nmap -sSV -Pn -T4 -p "$PORT" --script http-enum "$TARGET" \
-            -oA "${REPORT_DIR}/${TARGET}_nmap_http-enum"
+            -oA "${REPORT_DIR}/${TARGET}_nmap_http-enum" &
+        NMAP_PID=$!
     fi
 }
 
@@ -353,20 +393,28 @@ fast_scan() {
 deep_scan() {
     print_step "2" "In-depth scanning - vulnerability and service analysis"
     
+    # Wait for fast scan nmap to complete if still running
+    if [[ -n "${NMAP_PID:-}" ]]; then
+        wait $NMAP_PID 2>/dev/null || true
+    fi
+    
     if command_exists nmap; then
-        # HTTP scripts
-        print_running "nmap - HTTP vulnerability scripts"
+        # HTTP scripts (parallel)
+        print_running "nmap - HTTP vulnerability scripts (background)"
         nmap -sSV -Pn -T4 -p "$PORT" --script "$HTTPNSE" "$TARGET" \
-            -oA "${REPORT_DIR}/${TARGET}_nmap_http-scripts"
+            -oA "${REPORT_DIR}/${TARGET}_nmap_http-scripts" &
         
-        # Vulscan if available
+        # Vulscan if available (parallel)
         if [[ -f "${VULSCAN_DIR}/vulscan.nse" ]]; then
-            print_running "nmap - Vulscan (CVSS 5.0+)"
+            print_running "nmap - Vulscan (CVSS 5.0+) (background)"
             nmap -sSV -Pn -T4 --version-all -p "$PORT" \
                 --script "${VULSCAN_DIR}/vulscan.nse" "$TARGET" \
                 --script-args mincvss=5.0 \
-                -oA "${REPORT_DIR}/${TARGET}_nmap_vulscan"
+                -oA "${REPORT_DIR}/${TARGET}_nmap_vulscan" &
         fi
+        
+        # Wait for both to complete
+        wait
     fi
     
     # Nikto with evasion support
