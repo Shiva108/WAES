@@ -363,14 +363,11 @@ generate_html_report() {
         echo '<div class="subsection">'
         echo '<p>This report contains the results of a comprehensive security scan performed on <strong>'"$target"'</strong>.</p>'
         echo '<p>The scan included port enumeration, service detection, SSL/TLS analysis, CMS detection, and vulnerability assessment.</p>'
-        echo '</div></div>'
         
         # Include scan results
-        local file_pattern
-        for ext in txt nmap gnmap; do
-            for file in "${report_dir}/${target}"*."${ext}" 2>/dev/null; do
-                [[ -f "$file" ]] || continue
-                
+        local extensions=(txt nmap gnmap)
+        for ext in "${extensions[@]}"; do
+            while IFS= read -r -d '' file; do
                 local basename
                 basename=$(basename "$file")
                 local section_title="${basename%.*}"
@@ -381,8 +378,9 @@ generate_html_report() {
                 
                 # Convert to HTML section
                 text_to_html_section "$section_title" "$content"
-            done
+            done < <(find "${report_dir}" -maxdepth 1 -name "${target}*.${ext}" -print0 2>/dev/null)
         done
+        
         
         # Recommendations
         echo '<div class="section" id="recommendations">'

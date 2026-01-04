@@ -60,11 +60,24 @@ source "${SCRIPT_DIR}/lib/cms_scanner.sh" 2>/dev/null || true
 # shellcheck source=lib/report_generator.sh
 source "${SCRIPT_DIR}/lib/report_generator.sh" 2>/dev/null || true
 
+# Phase 1: Quick Win Enhancements
+# shellcheck source=lib/profile_loader.sh
+source "${SCRIPT_DIR}/lib/profile_loader.sh" 2>/dev/null || true
+
+# shellcheck source=lib/exporters/json_exporter.sh
+source "${SCRIPT_DIR}/lib/exporters/json_exporter.sh" 2>/dev/null || true
+
+# shellcheck source=lib/batch_scanner.sh
+source "${SCRIPT_DIR}/lib/batch_scanner.sh" 2>/dev/null || true
+
+# shellcheck source=lib/parallel_scan.sh
+source "${SCRIPT_DIR}/lib/parallel_scan.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
 
-VERSION="${WAES_VERSION:-1.0.0}"
+VERSION="${WAES_VERSION:-1.2.0}"
 TARGET=""
 PORT="${DEFAULT_HTTP_PORT:-80}"
 PROTOCOL="${DEFAULT_PROTOCOL:-http}"
@@ -73,6 +86,10 @@ VERBOSE=false
 QUIET=false
 RESUME=false
 GENERATE_HTML=false
+GENERATE_JSON=false
+USE_PROFILE=""
+TARGETS_FILE=""
+PARALLEL_MODE=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -98,12 +115,16 @@ usage() {
 Usage: ${0##*/} [OPTIONS] -u <target>
 
 Options:
-    -u <target>     Target IP or domain (required)
+    -u <target>     Target IP or domain (required, or use --targets)
     -p <port>       Port number (default: 80, or 443 with -s)
     -s              Use HTTPS protocol
     -t <type>       Scan type: fast, full, deep, advanced (default: full)
+    --profile <p>   Use scan profile (ctf-box, web-app, bug-bounty, quick-scan)
+    --targets <f>   Scan multiple targets from file (supports CIDR)
+    --parallel      Enable parallel scanning (faster)
     -r              Resume previous scan
     -H              Generate HTML report
+    -J              Generate JSON report
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
@@ -112,12 +133,20 @@ Scan Types:
     fast     - Quick reconnaissance (wafw00f, nmap http-enum)
     full     - Standard scan (adds nikto, nmap scripts) [default]
     deep     - Comprehensive (adds vulscan, uniscan, fuzzing)
-    advanced - Deep scan + SSL/TLS, XSS, CMS-specific scans
+    advanced - Deep + SSL/TLS, XSS testing, CMS-specific scans
+
+Profiles:
+    ctf-box      - Aggressive scanning for CTF machines
+    web-app      - Professional web application testing
+    bug-bounty   - Careful, stealthy scanning
+    quick-scan   - Fast reconnaissance only
 
 Examples:
     ${0##*/} -u 10.10.10.130
     ${0##*/} -u 10.10.10.130 -p 8080
-    ${0##*/} -u example.com -s -t advanced -H
+    ${0##*/} -u example.com -s -t advanced -H -J
+    ${0##*/} -u example.com --profile ctf-box --parallel
+    ${0##*/} --targets targets.txt -t deep -H
     ${0##*/} -u example.com -r  # Resume previous scan
 
 EOF
@@ -162,40 +191,51 @@ setup_report_dir() {
 }
 
 parse_args() {
-    while getopts ":u:p:t:rHsvqh" opt; do
-        case $opt in
-            u) TARGET="$OPTARG" ;;
-            p) PORT="$OPTARG" ;;
-            s) 
+    # Support long options
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -u) TARGET="$2"; shift 2 ;;
+            -p) PORT="$2"; shift 2 ;;
+            -s) 
                 PROTOCOL="https"
                 [[ "$PORT" == "80" ]] && PORT="443"
+                shift
                 ;;
-            t) SCAN_TYPE="$OPTARG" ;;
-            r) RESUME=true ;;
-            H) GENERATE_HTML=true ;;
-            v) VERBOSE=true ;;
-            q) QUIET=true ;;
-            h) 
+            -t) SCAN_TYPE="$2"; shift 2 ;;
+            --profile) USE_PROFILE="$2"; shift 2 ;;
+            --targets) TARGETS_FILE="$2"; shift 2 ;;
+            --parallel) PARALLEL_MODE=true; shift ;;
+            -r) RESUME=true; shift ;;
+            -H) GENERATE_HTML=true; shift ;;
+            -J) GENERATE_JSON=true; shift ;;
+            -v) VERBOSE=true; shift ;;
+            -q) QUIET=true; shift ;;
+            -h) 
                 show_banner
                 usage
                 exit 0
                 ;;
-            :)
-                print_error "Option -$OPTARG requires an argument"
-                usage
-                exit 1
-                ;;
-            \?)
-                print_error "Invalid option: -$OPTARG"
+            *)
+                print_error "Unknown option: $1"
                 usage
                 exit 1
                 ;;
         esac
     done
     
-    # Validate required arguments
+    # Check for batch scanning
+    if [[ -n "$TARGETS_FILE" ]]; then
+        if [[ ! -f "$TARGETS_FILE" ]]; then
+            print_error "Targets file not found: $TARGETS_FILE"
+            exit 1
+        fi
+        print_info "Batch scanning mode enabled"
+        return 0
+    fi
+    
+    # Require target if not batch mode
     if [[ -z "$TARGET" ]]; then
-        print_error "Target is required. Use -u <target>"
+        print_error "Target required (use -u or --targets)"
         usage
         exit 1
     fi
@@ -387,6 +427,27 @@ main() {
     # Show banner
     show_banner
     
+    # Load profile if specified
+    if [[ -n "$USE_PROFILE" ]]; then
+        if declare -f load_profile &>/dev/null; then
+            load_profile "$USE_PROFILE" "${SCRIPT_DIR}/profiles"
+            apply_profile 2>/dev/null || true
+            print_success "Profile '$USE_PROFILE' loaded"
+        fi
+    fi
+    
+    # Batch scanning mode
+    if [[ -n "$TARGETS_FILE" ]]; then
+        if declare -f batch_scan &>/dev/null; then
+            local scan_flags=""
+            [[ "$VERBOSE" == "true" ]] && scan_flags+=" -v"
+            [[ "$GENERATE_HTML" == "true" ]] && scan_flags+=" -H"
+            [[ "$GENERATE_JSON" == "true" ]] && scan_flags+=" -J"
+            batch_scan "$TARGETS_FILE" "$SCAN_TYPE" "${REPORT_DIR}/batch" "$PARALLEL_MODE" "$scan_flags"
+            exit $?
+        fi
+    fi
+    
     # Check for resume
     if [[ "$RESUME" == "true" ]]; then
         if declare -f resume_scan &>/dev/null; then
@@ -445,6 +506,15 @@ main() {
             fuzzing_scan
             standard_scan
             ssl_tls_scan
+    
+    # Generate JSON report if requested
+    if [[ "$GENERATE_JSON" == "true" ]]; then
+        echo ""
+        print_info "Generating JSON report..."
+        if declare -f export_to_json &>/dev/null; then
+            export_to_json "$TARGET" "$REPORT_DIR" "$SCAN_TYPE"
+        fi
+    fi
             xss_vulnerability_scan
             cms_detection_scan
             ;;

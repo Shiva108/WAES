@@ -1,0 +1,31 @@
+# Quick Scan Profile
+# Fast reconnaissance only
+
+name: "Quick Scan"
+description: "Fast reconnaissance for initial discovery"
+scan_type: "fast"
+
+# Scanning options
+aggressive: false
+timeout: 180
+threads: 15
+
+# Enabled modules
+modules:
+  ssl: true
+  xss: false
+  cms: true
+  fuzzing: false
+  vulscan: false
+
+# Nmap options
+nmap:
+  intensity: 2
+  scripts: "http-enum"
+  port_range: "80,443"
+
+# Output
+output:
+  html: false
+  json: true
+  verbose: false

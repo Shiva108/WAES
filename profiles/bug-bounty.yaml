@@ -1,0 +1,43 @@
+# Bug Bounty Scan Profile
+# Stealth scanning for bug bounty programs
+
+name: "Bug Bounty"
+description: "Careful scanning for bug bounty hunting"
+scan_type: "full"
+
+# Scanning options
+aggressive: false
+timeout: 900
+threads: 5
+
+# Enabled modules
+modules:
+  ssl: true
+  xss: true
+  cms: true
+  fuzzing: false
+  vulscan: false
+
+# Nmap options
+nmap:
+  intensity: 2
+  scripts: "safe"
+  port_range: "80,443,8080,8443"
+
+# Directory fuzzing
+fuzzing:
+  wordlists:
+    - "common.txt"
+  extensions: "php,html,js"
+  threads: 5
+
+# Stealth options
+stealth:
+  random_delays: "2-5"
+  user_agent_rotate: true
+
+# Output
+output:
+  html: true
+  json: true
+  verbose: false

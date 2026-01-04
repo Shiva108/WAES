@@ -1,0 +1,40 @@
+# CTF Box Scan Profile
+# Optimized for CTF challenges and vulnerable VMs
+
+name: "CTF Box"
+description: "Aggressive scanning for CTF machines"
+scan_type: "deep"
+
+# Scanning options
+aggressive: true
+timeout: 300
+threads: 20
+
+# Enabled modules
+modules:
+  ssl: true
+  xss: true
+  cms: true
+  fuzzing: true
+  vulscan: true
+
+# Nmap options
+nmap:
+  intensity: 4
+  scripts: "default,vuln"
+  port_range: "1-65535"
+
+# Directory fuzzing
+fuzzing:
+  wordlists:
+    - "common.txt"
+    - "directory-list-2.3-medium.txt"
+    - "raft-large-directories.txt"
+  extensions: "php,txt,bak,old,html,js,json,xml"
+  threads: 30
+
+# Output
+output:
+  html: true
+  json: true
+  verbose: true

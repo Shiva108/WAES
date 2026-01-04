@@ -1,0 +1,14 @@
+# Test targets file for batch scanning
+# Lines starting with # are comments
+
+# Single targets
+example.com
+scanme.nmap.org
+
+# IP addresses
+192.168.1.100
+
+# CIDR notation (will be expanded if nmap available
+# 10.10.10.0/28
+
+# Different ports will be handled by flags

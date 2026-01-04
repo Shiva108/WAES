@@ -1,0 +1,40 @@
+# Web Application Penetration Test Profile
+# Standard web application security assessment
+
+name: "Web App Pentest"
+description: "Professional web application security testing"
+scan_type: "advanced"
+
+# Scanning options
+aggressive: false
+timeout: 600
+threads: 10
+
+# Enabled modules
+modules:
+  ssl: true
+  xss: true
+  cms: true
+  fuzzing: true
+  vulscan: false
+
+# Nmap options
+nmap:
+  intensity: 3
+  scripts: "http-*,ssl-*"
+  port_range: "80,443,8000-8888"
+
+# Directory fuzzing
+fuzzing:
+  wordlists:
+    - "common.txt"
+    - "directory-list-2.3-small.txt"
+  extensions: "php,asp,aspx,jsp,html"
+  threads: 10
+
+# Output
+output:
+  html: true
+  json: true
+  markdown: true
+  verbose: false

@@ -1,0 +1,17 @@
+{
+  "waes_version": "1.2.0",
+  "scan_meta": {
+    "target": "--help",
+    "scan_type": "full",
+    "scan_date": "2026-01-04 01:21:18",
+    "scanner": "WAES - Web Auto Enum & Scanner"
+  },
+  "nmap_results": [],
+  "ssl_results": {},
+  "cms_results": {},
+  "xss_results": [],
+  "summary": {
+    "total_files": 1,
+    "scan_complete": true
+  }
+}
