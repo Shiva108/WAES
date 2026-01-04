@@ -101,6 +101,20 @@ source "${SCRIPT_DIR}/lib/security_tests/auth_scanner.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/security_tests/api_scanner.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/security_tests/upload_scanner.sh" 2>/dev/null || true
 
+# Phase 4: Intelligence modules
+source "${SCRIPT_DIR}/lib/scan_analyzer.sh" 2>/dev/null || true
+
+# Phase 5: Enumeration modules
+source "${SCRIPT_DIR}/lib/osint/dns_recon.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/ssl_analyzer.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/osint/metadata_extractor.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/cloud_enum.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/osint/user_enum.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/tech_fingerprint.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/osint/historical_analysis.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/api_discovery.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/osint/social_intel.sh" 2>/dev/null || true
+
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -129,9 +143,9 @@ OWASP_SCAN=false
 API_SCAN=false
 
 # Advanced features (Phase 2)
-ORCHESTRATE=false
-INTEL_ENRICH=false
-PROFESSIONAL_REPORT=false
+ORCHESTRATE=true
+INTEL_ENRICH=true
+PROFESSIONAL_REPORT=true
 EMAIL_COMPLIANCE=false
 
 # Security testing flags (Phase 3)
@@ -140,6 +154,21 @@ AUTH_TEST=false
 API_SECURITY_TEST=false
 UPLOAD_TEST=false
 FULL_SECURITY_TEST=false
+
+# Intelligence flags (Phase 4)
+ANALYZE_SCAN=true  # Intelligent analysis enabled by default
+
+# Enumeration flags (Phase 5)
+DNS_RECON=false
+SSL_ANALYZE=false
+METADATA_EXTRACT=false
+CLOUD_ENUM=false
+USER_ENUM=false
+TECH_FINGERPRINT=false
+HISTORICAL_ANALYSIS=false
+API_DISCOVERY=false
+SOCIAL_OSINT=false
+FULL_ENUM=false  # Enable all enumeration
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -221,9 +250,23 @@ Options:
     --api-scan          Run API security tests
     --upload-test       Run file upload vulnerability tests
     --full-security     Run all security tests (SQLi, auth, API, upload)
+    --analyze           Generate intelligent analysis of scan results
     --orchestrate       Use intelligent orchestration engine
     --intel             Enable CVE correlation and exploit mapping
     --professional      Generate professional pentest report (exec summary + findings)
+
+Enumeration Options:
+    --dns-recon         Advanced DNS/subdomain reconnaissance
+    --ssl-analyze       SSL/TLS certificate and security analysis
+    --metadata          Extract metadata from documents
+    --cloud-enum        Enumerate cloud storage (S3, Azure, GCP)
+    --user-enum         User/email enumeration
+    --tech-stack        Technology stack fingerprinting
+    --historical        Historical/Wayback analysis
+    --api-discover      API endpoint discovery
+    --social-osint      Social media OSINT
+    --full-enum         Enable ALL enumeration modules
+
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
@@ -336,9 +379,23 @@ parse_args() {
             --api-scan) API_SECURITY_TEST=true; shift ;;
             --upload-test) UPLOAD_TEST=true; shift ;;
             --full-security) FULL_SECURITY_TEST=true; SQLI_TEST=true; AUTH_TEST=true; API_SECURITY_TEST=true; UPLOAD_TEST=true; shift ;;
+            --analyze) ANALYZE_SCAN=true; shift ;;
             --orchestrate) ORCHESTRATED_SCAN=true; shift ;;
             --intel) INTEL_ENRICH=true; shift ;;
             --professional) PROFESSIONAL_REPORT=true; INTEL_ENRICH=true; shift ;;
+            
+            # Enumeration flags
+            --dns-recon) DNS_RECON=true; shift ;;
+            --ssl-analyze) SSL_ANALYZE=true; shift ;;
+            --metadata) METADATA_EXTRACT=true; shift ;;
+            --cloud-enum) CLOUD_ENUM=true; shift ;;
+            --user-enum) USER_ENUM=true; shift ;;
+            --tech-stack) TECH_FINGERPRINT=true; shift ;;
+            --historical) HISTORICAL_ANALYSIS=true; shift ;;
+            --api-discover) API_DISCOVERY=true; shift ;;
+            --social-osint) SOCIAL_OSINT=true; shift ;;
+            --full-enum) FULL_ENUM=true; DNS_RECON=true; SSL_ANALYZE=true; METADATA_EXTRACT=true; CLOUD_ENUM=true; USER_ENUM=true; TECH_FINGERPRINT=true; HISTORICAL_ANALYSIS=true; API_DISCOVERY=true; SOCIAL_OSINT=true; shift ;;
+            
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
             -h) 
@@ -823,6 +880,72 @@ main() {
             else
                 print_warn "Upload scanner module not loaded"
             fi
+        fi
+        
+        # Run intelligent analysis if requested
+        if [[ "$ANALYZE_SCAN" == "true" ]]; then
+            echo ""
+            print_info "Running intelligent scan analysis..."
+            if declare -f analyze_scan_results &>/dev/null; then
+                analyze_scan_results "$TARGET" "$REPORT_DIR"
+            else
+                print_warn "Scan analyzer module not loaded"
+            fi
+        fi
+        
+        # Run enumeration modules
+        if [[ "$DNS_RECON" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running DNS reconnaissance..."
+            declare -f run_dns_recon &>/dev/null && run_dns_recon "$TARGET" "$REPORT_DIR" || print_warn "DNS recon module not loaded"
+        fi
+        
+        if [[ "$SSL_ANALYZE" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running SSL/TLS analysis..."
+            declare -f analyze_ssl &>/dev/null && analyze_ssl "$TARGET" "$PORT" "$REPORT_DIR" || print_warn "SSL analyzer not loaded"
+        fi
+        
+        if [[ "$METADATA_EXTRACT" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running metadata extraction..."
+            declare -f run_metadata_extraction &>/dev/null && run_metadata_extraction "$base_url" "$REPORT_DIR" || print_warn "Metadata extractor not loaded"
+        fi
+        
+        if [[ "$CLOUD_ENUM" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running cloud infrastructure enumeration..."
+            declare -f run_cloud_enumeration &>/dev/null && run_cloud_enumeration "$TARGET" "$REPORT_DIR" || print_warn "Cloud enum not loaded"
+        fi
+        
+        if [[ "$USER_ENUM" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running user enumeration..."
+            declare -f run_user_enumeration &>/dev/null && run_user_enumeration "$TARGET" "$REPORT_DIR" || print_warn "User enum not loaded"
+        fi
+        
+        if [[ "$TECH_FINGERPRINT" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running technology fingerprinting..."
+            declare -f fingerprint_technologies &>/dev/null && fingerprint_technologies "$TARGET" "$REPORT_DIR" || print_warn "Tech fingerprint not loaded"
+        fi
+        
+        if [[ "$HISTORICAL_ANALYSIS" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running historical analysis..."
+            declare -f analyze_historical &>/dev/null && analyze_historical "$TARGET" "$REPORT_DIR" || print_warn "Historical analysis not loaded"
+        fi
+        
+        if [[ "$API_DISCOVERY" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running API discovery..."
+            declare -f discover_apis &>/dev/null && discover_apis "$TARGET" "$REPORT_DIR" || print_warn "API discovery not loaded"
+        fi
+        
+        if [[ "$SOCIAL_OSINT" == "true" ]] || [[ "$FULL_ENUM" == "true" ]]; then
+            echo ""
+            print_info "Running social media OSINT..."
+            declare -f run_social_osint &>/dev/null && run_social_osint "$TARGET" "$REPORT_DIR" || print_warn "Social OSINT not loaded"
         fi
         
         # Reset protocol for next port iteration
