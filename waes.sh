@@ -93,6 +93,7 @@ source "${SCRIPT_DIR}/lib/owasp_scanner.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/orchestrator.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/intelligence_engine.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/report_engine/generator.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/email_compliance.sh" 2>/dev/null || true
 
 #==============================================================================
 # VARIABLES
@@ -125,6 +126,7 @@ API_SCAN=false
 ORCHESTRATE=false
 INTEL_ENRICH=false
 PROFESSIONAL_REPORT=false
+EMAIL_COMPLIANCE=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -200,6 +202,7 @@ Options:
     --no-evidence       Disable auto-evidence collection
     -C, --chains        Enable vulnerability chain tracking
     --owasp             Run OWASP Top 10 focused scan
+    --email-compliance  Test domain email authentication (SPF/DKIM/DMARC)
     --orchestrate       Use intelligent orchestration engine
     --intel             Enable CVE correlation and exploit mapping
     --professional      Generate professional pentest report (exec summary + findings)
@@ -309,7 +312,8 @@ parse_args() {
             --no-evidence) EVIDENCE_MODE=false; shift ;;
             -C|--chains) TRACK_CHAINS=true; shift ;;
             --owasp) OWASP_SCAN=true; shift ;;
-            --orchestrate) ORCHESTRATE=true; shift ;;
+            --email-compliance) EMAIL_COMPLIANCE=true; shift ;;
+            --orchestrate) ORCHESTRATED_SCAN=true; shift ;;
             --intel) INTEL_ENRICH=true; shift ;;
             --professional) PROFESSIONAL_REPORT=true; INTEL_ENRICH=true; shift ;;
             -v) VERBOSE=true; shift ;;
@@ -735,6 +739,18 @@ main() {
         # Mark scan as complete
         if declare -f complete_scan &>/dev/null; then
             complete_scan "$TARGET" "$REPORT_DIR"
+        fi
+        
+        # Run email compliance test if requested
+        if [[ "$EMAIL_COMPLIANCE" == "true" ]]; then
+            echo ""
+            print_info "Running email compliance test..."
+            local compliance_report="${REPORT_DIR}/${TARGET}_email_compliance.md"
+            if declare -f scan_email_compliance &>/dev/null; then
+                scan_email_compliance "$TARGET" "$compliance_report"
+            else
+                print_warn "Email compliance module not loaded"
+            fi
         fi
         
         # Reset protocol for next port iteration
