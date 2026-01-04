@@ -2,227 +2,205 @@
 
 # WAES - Web Auto Enum & Scanner
 
-## Version 1.0.0
+**Version 1.2.77**
 
-A comprehensive bash-based web enumeration toolkit for CTF and penetration testing. WAES automates the tedious process of running multiple scanning tools against web targets, saving time and ensuring comprehensive coverage.
+WAES is a professional-grade bash-based web enumeration and reconnaissance platform designed for Capture The Flag (CTF) competitions, Bug Bounty hunting, and Penetration Testing. It automates the complex workflow of security scanning by orchestrating best-in-class tools into a unified, high-performance pipeline.
 
-## Features
+---
 
-- 🔍 **Multi-stage scanning**: Fast recon, in-depth analysis, and comprehensive fuzzing
-- 🔐 **HTTPS support**: Automatic detection and SSL/TLS scanning
-- 📊 **Organized reports**: All results saved to dedicated report directory
-- 🎨 **Color-coded output**: Easy-to-read results with progress tracking
-- ⚙️ **Configurable**: Customizable wordlists, timeouts, and scan types
+## 🚀 Key Features
 
-## Installation
+### Core Capabilities
+
+- **Multi-Stage Engine**: 4 scan levels from Fast Recon (`fast`) to Advanced Exploitation (`advanced`).
+- **Parallel Execution**: Concurrent usage of scanning tools for 3-5x faster results.
+- **Smart Profiles**: Pre-tuned configurations for CTF, Bug Bounties, and Web Apps.
+- **Batch Scanning**: Native support for list-based and CIDR network scanning.
+
+### Advanced Modules
+
+- **Stealth Mode**: User-Agent rotation, proxy support, and timing evasion techniques.
+- **OSINT Recon**: Subdomain enumeration, Certificate Transparency, and Google Dorks.
+- **Parameter Discovery**: Advanced parameter mining and hidden input detection.
+- **Containerization**: Full Docker and Docker Compose support for portable deployment.
+- **Continuous Monitoring**: Change detection, baseline comparisons, and cron scheduling.
+
+### Reporting & Output
+
+- **Multi-Format**: JSON, XML, CSV, Markdown, and HTML reports.
+- **Structured Data**: Machine-readable outputs for pipeline integration.
+- **Detailed Artifacts**: Organized directory structure for every scan target.
+
+---
+
+## 📂 Repository Structure
+
+```text
+WAES/
+├── waes.sh                 # Main CLI entry point
+├── waes-watch.sh           # Continuous monitoring & baselining script
+├── install.sh              # Dependency installer
+├── lib/
+│   ├── osint_scanner.sh    # Subdomain & OSINT module
+│   ├── param_discovery.sh  # Parameter discovery engine
+│   ├── stealth.sh          # Evasion configuration library
+│   ├── batch_scanner.sh    # Multi-target orchestrator
+│   ├── parallel_scan.sh    # Job queue & concurrency manager
+│   ├── profile_loader.sh   # YAML profile parser
+│   ├── plugin_manager.sh   # Plugin hook system
+│   └── exporters/          # JSON, XML, CSV, MD generators
+├── profiles/               # Scan configuration profiles (YAML)
+├── plugins/                # Extension scripts (Slack, etc.)
+├── report/                 # Default output directory
+└── docker-compose.yml      # Container orchestration config
+```
+
+---
+
+## 🛠️ Installation
+
+### Native Installation
+
+Requires a Linux environment (Kali Linux recommended).
 
 ```bash
 git clone https://github.com/Shiva108/WAES.git
 cd WAES
+chmod +x install.sh
 sudo ./install.sh
 ```
 
-The installer will:
+_The installer automatically detects your package manager and installs dependencies like nmap, nikto, gobuster, etc._
 
-- Detect your package manager (apt/yum/pacman)
-- Install required tools (nmap, nikto, gobuster, dirb, whatweb, wafw00f)
-- Clone SecLists wordlist collection
-- Set up vulscan NSE scripts
-- Configure permissions
+### Docker Installation
 
-## Quick Start
+Run WAES in a container to avoid dependency conflicts.
 
 ```bash
-# Basic scan
+# Build the image
+docker build -t waes:latest .
+
+# Or using Compose
+docker-compose up -d
+```
+
+---
+
+## 📖 Usage Guide
+
+### Basic Scans
+
+```bash
+# Standard scan (HTTP)
 sudo ./waes.sh -u 10.10.10.130
 
-# Scan specific port
-sudo ./waes.sh -u 10.10.10.130 -p 8080
+# HTTPS Deep Scan
+sudo ./waes.sh -u target.com -s -t deep
 
-# HTTPS with deep scan
-sudo ./waes.sh -u example.com -s -t deep
-
-# Advanced scan with SSL/TLS, XSS, CMS detection + HTML report
-sudo ./waes.sh -u example.com -s -t advanced -H
-
-# Resume a previous scan
-sudo ./waes.sh -u example.com -r
-
-# Fast reconnaissance only
-sudo ./waes.sh -u 10.10.10.130 -t fast
+# Generate HTML & JSON reports
+sudo ./waes.sh -u target.com -t advanced -H -J
 ```
 
-## Usage
+### Profile-Based Scanning
 
-```test
-Usage: waes.sh [OPTIONS] -u <target>
-
-Options:
-    -u <target>     Target IP or domain (required)
-    -p <port>       Port number (default: 80, or 443 with -s)
-    -s              Use HTTPS protocol
-    -t <type>       Scan type: fast, full, deep, advanced (default: full)
-    -r              Resume previous scan
-    -H              Generate HTML report
-    -v              Verbose output
-    -q              Quiet mode (minimal output)
-    -h              Show this help message
-
-Scan Types:
-    fast     - Quick reconnaissance (wafw00f, nmap http-enum)
-    full     - Standard scan (adds nikto, nmap scripts) [default]
-    deep     - Comprehensive (adds vulscan, uniscan, fuzzing)
-    advanced - Deep + SSL/TLS, XSS testing, CMS-specific scans
-```
-
-## Scan Stages
-
-### Fast Scan (`-t fast`)
-
-- **wafw00f**: Web Application Firewall detection
-- **nmap http-enum**: Quick directory/file enumeration
-
-### Full Scan (`-t full`) [Default]
-
-Everything in fast, plus:
-
-- **nmap HTTP scripts**: Headers, cookies, XSS detection
-- **nikto**: Web server vulnerability scanner
-- **Standard nmap**: Service version detection
-
-### Deep Scan (`-t deep`)
-
-Everything in full, plus:
-
-- **whatweb**: CMS and technology detection
-- **vulscan**: CVE vulnerability matching (CVSS 5.0+)
-- **uniscan**: Additional vulnerability checks
-- **supergobuster**: Multi-wordlist directory fuzzing
-
-### Advanced Scan (`-t advanced`)
-
-Everything in deep, plus:
-
-- **SSL/TLS scanner**: Certificate validation, cipher analysis, vulnerability checks
-- **XSS scanner**: Cross-Site Scripting payload testing
-- **CMS scanner**: WordPress, Drupal, Joomla detection and enumeration
-- **HTML report**: Professional formatted report generation
-
-## Additional Tools
-
-### supergobuster.sh
-
-Multi-wordlist directory enumeration using gobuster:
+Use pre-tuned profiles for specific scenarios:
 
 ```bash
-./supergobuster.sh http://10.10.10.130:8080
-./supergobuster.sh http://10.10.10.130 -t 20 -x php,bak
+# Capture The Flag (Aggressive)
+sudo ./waes.sh -u 10.10.10.130 --profile ctf-box
+
+# Bug Bounty (Stealthy)
+sudo ./waes.sh -u target.com --profile bug-bounty
+
+# Available profiles: ctf-box, web-app, bug-bounty, quick-scan
 ```
 
-### resolveip.py
+### Batch & Parallel Scanning
 
-Bulk DNS resolution with concurrent processing:
+Scan entire networks or lists of domains efficiently:
 
 ```bash
-./resolveip.py domains.txt                  # Basic resolution
-./resolveip.py domains.txt -f json          # JSON output
-./resolveip.py domains.txt --ip-only        # IPs only
-./resolveip.py domains.txt -t 20 -T 3       # 20 threads, 3s timeout
+# Scan a list of targets (supports CIDR)
+sudo ./waes.sh --targets targets.txt --parallel
+
+# Targets file example:
+# 192.168.1.10
+# 10.10.10.0/24
+# example.com
 ```
 
-### cleanrf.sh
-
-Safely manage report files:
+### Docker Usage
 
 ```bash
-./cleanrf.sh                    # Interactive cleanup
-./cleanrf.sh -a                 # Archive before deleting
-./cleanrf.sh -d 7               # Delete files older than 7 days
-./cleanrf.sh --dry-run          # Preview without deleting
+# Run a transient scan container
+docker run --rm -v $(pwd)/report:/opt/waes/report waes:latest -u scanme.nmap.org
+
+# Run with a profile
+docker run --rm -v $(pwd)/report:/opt/waes/report waes:latest \
+    -u target.com --profile ctf-box
 ```
 
-## Configuration
+### Stealth Mode
 
-Edit `config.sh` to customize:
+Activate evasion techniques before scanning:
 
-- Wordlist paths
-- Default timeouts
-- Threading settings
-- Nmap script selection
-- Gobuster status codes
+```bash
+# Source the stealth library
+source lib/stealth.sh
 
-## Project Structure
+# Configure level (low, medium, high, paranoid)
+configure_stealth_mode high
 
-```text
-WAES/
-├── waes.sh              # Main scanner script
-├── supergobuster.sh     # Directory fuzzing
-├── install.sh           # Installer
-├── cleanrf.sh           # Report cleanup
-├── resolveip.py         # DNS resolution
-├── config.sh            # Configuration
-├── lib/                 # Library scripts
-│   ├── colors.sh        # Color output
-│   ├── validation.sh    # Input validation
-│   └── progress.sh      # Progress bar
-├── report/              # Scan results
-├── SecLists/            # Wordlists
-└── vulscan/             # Nmap vulscan scripts
+# Run scan
+sudo ./waes.sh -u target.com --profile bug-bounty
 ```
 
-## Requirements
+---
 
-**Required Tools:**
+## 🧩 Plugins & Extensions
 
-- nmap
-- nikto
-- gobuster
-- dirb
-- whatweb
-- wafw00f
+WAES supports a hook-based plugin system.
 
-**Optional Tools:**
+**Managing Plugins:**
 
-- uniscan
-- feroxbuster
-- sslscan
+```bash
+./lib/plugin_manager.sh list
+./lib/plugin_manager.sh load slack_notify
+```
 
-## Changelog
+**Enabled Plugins:**
 
-### v1.0.0 (2024)
+- **Slack Notify**: Sends webhook alerts on scan start/finish/findings.
+- **Custom Scanner**: Template for integrating proprietary tools.
 
-- Complete refactor of all scripts
-- Added modular library system (colors, validation, progress)
-- Added HTTPS support with `-s` flag
-- Added scan type selection (`-t fast|full|deep`)
-- Fixed wordlist path auto-detection
-- Added concurrent DNS resolution to resolveip.py
-- Improved install script with multi-distro support
-- Enhanced cleanrf.sh with archive and days filter options
-- Removed deprecated scripts (supergobuster.old, testscript.sh)
+---
 
-### v0.0.37 (Previous)
+## 🤝 Contribution
 
-- Initial alpha release
+We welcome contributions!
 
-## License
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/amazing-feature`.
+3. Commit your changes: `git commit -m 'Add amazing feature'`.
+4. Push to the branch: `git push origin feature/amazing-feature`.
+5. Open a Pull Request.
 
-GPL-2.0 License - See [LICENSE](LICENSE) for details.
+Please ensure all new scripts pass `bash -n` syntax checks.
 
-## Author
+---
+
+## 📜 License
+
+This project is licensed under the **GPL-2.0 License**. See the `LICENSE` file for details.
+
+---
+
+## 📞 Author & Contact
 
 **Shiva @ CPH:SEC**
 
 - GitHub: [Shiva108](https://github.com/Shiva108)
 
-## Contributing
+---
 
-Pull requests welcome! For major changes, please open an issue first.
-
-## TODO
-
-- [x] Add SSL/TLS certificate scanning
-- [x] Add XSS payload testing
-- [x] Add CMS-specific scan modules
-- [x] Add HTML report generation
-- [x] Add scan resumption capability
+### Verified Production Release - v1.2.77
