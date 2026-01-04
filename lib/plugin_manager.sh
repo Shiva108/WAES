@@ -1,163 +1,123 @@
 #!/usr/bin/env bash
 #==============================================================================
 # WAES Plugin Manager
-# Discover, load, and execute plugins to extend WAES functionality
+# Load and execute third-party scanner plugins
 #==============================================================================
 
-set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "${SCRIPT_DIR}/lib/colors.sh" 2>/dev/null || true
 
-# Source color library if available
-if [[ -f "${SCRIPT_DIR:-$(dirname "$0")}/lib/colors.sh" ]]; then
-    source "${SCRIPT_DIR:-$(dirname "$0")}/lib/colors.sh"
-else
-    print_info() { echo "[*] $*"; }
-    print_success() { echo "[+] $*"; }
-    print_error() { echo "[!] $*" >&2; }
-    print_warn() { echo "[~] $*"; }
-fi
+PLUGINS_DIR="${SCRIPT_DIR}/plugins"
+ENABLED_PLUGINS=()
 
 #==============================================================================
-# PLUGIN SYSTEM
+# PLUGIN DISCOVERY
 #==============================================================================
 
-declare -A LOADED_PLUGINS
-declare -A PLUGIN_HOOKS
-
-# Plugin hook points
-HOOK_PRE_SCAN="pre_scan"
-HOOK_POST_SCAN="post_scan"
-HOOK_ON_FINDING="on_finding"
-HOOK_PRE_STAGE="pre_stage"
-HOOK_POST_STAGE="post_stage"
-
-# Discover plugins in directory
 discover_plugins() {
-    local plugin_dir="${1:-./plugins}"
+    local plugins=()
     
-    if [[ ! -d "$plugin_dir" ]]; then
-        print_warn "Plugin directory not found: $plugin_dir"
+    for plugin_dir in "${PLUGINS_DIR}"/*; do
+        [[ -d "$plugin_dir" ]] || continue
+        [[ -f "${plugin_dir}/manifest.yml" ]] || continue
+        
+        local plugin_name=$(basename "$plugin_dir")
+        plugins+=("$plugin_name")
+    done
+    
+    echo "${plugins[@]}"
+}
+
+#==============================================================================
+# PLUGIN VALIDATION
+#==============================================================================
+
+validate_plugin() {
+    local plugin_name="$1"
+    local plugin_dir="${PLUGINS_DIR}/${plugin_name}"
+    
+    # Check manifest exists
+    if [[ ! -f "${plugin_dir}/manifest.yml" ]]; then
+        print_error "Plugin $plugin_name missing manifest.yml"
         return 1
     fi
     
-    print_info "Discovering plugins in: $plugin_dir"
+    # Check main script exists
+    if [[ ! -f "${plugin_dir}/main.sh" ]]; then
+        print_error "Plugin $plugin_name missing main.sh"
+        return 1
+    fi
     
-    for plugin_file in "$plugin_dir"/*.sh; do
-        [[ -f "$plugin_file" ]] || continue
+    # Check dependencies (basic check)
+    local deps
+    deps=$(grep "dependencies:" "${plugin_dir}/manifest.yml" -A 10 | grep "  -" | sed 's/.*- //')
+    
+    for dep in $deps; do
+        if ! command -v "$dep" &>/dev/null; then
+            print_warn "Plugin $plugin_name requires $dep (not installed)"
+        fi
+    done
+    
+    return 0
+}
+
+#==============================================================================
+# HOOK SYSTEM
+#==============================================================================
+
+trigger_hook() {
+    local hook_name="$1"
+    shift
+    local args=("$@")
+    
+    print_info "Triggering hook: $hook_name"
+    
+    for plugin_name in "${ENABLED_PLUGINS[@]}"; do
+        local plugin_dir="${PLUGINS_DIR}/${plugin_name}"
         
-        local plugin_name
-        plugin_name=$(basename "$plugin_file" .sh)
-        
-        echo "  - $plugin_name"
+        # Check if plugin listens to this hook
+        if grep -q "  - $hook_name" "${plugin_dir}/manifest.yml"; then
+            print_running "  Executing plugin: $plugin_name"
+            
+            # Execute plugin
+            if [[ -x "${plugin_dir}/main.sh" ]]; then
+                "${plugin_dir}/main.sh" "$hook_name" "${args[@]}" || true
+            fi
+        fi
     done
 }
 
-# Load a plugin
+#==============================================================================
+# PLUGIN MANAGEMENT
+#==============================================================================
+
 load_plugin() {
     local plugin_name="$1"
-    local plugin_dir="${2:-./plugins}"
-    local plugin_file="${plugin_dir}/${plugin_name}.sh"
     
-    if [[ ! -f "$plugin_file" ]]; then
-        print_error "Plugin not found: $plugin_name"
-        return 1
-    fi
-    
-    # Check if already loaded
-    if [[ -n "${LOADED_PLUGINS[$plugin_name]:-}" ]]; then
-        print_warn "Plugin already loaded: $plugin_name"
-        return 0
-    fi
-    
-    print_info "Loading plugin: $plugin_name"
-    
-    # Source the plugin
-    # shellcheck disable=SC1090
-    if source "$plugin_file"; then
-        LOADED_PLUGINS[$plugin_name]="$plugin_file"
-        print_success "Plugin loaded: $plugin_name"
-        
-        # Call plugin init if exists
-        if declare -f "plugin_${plugin_name}_init" &>/dev/null; then
-            "plugin_${plugin_name}_init"
-        fi
-        
+    if validate_plugin "$plugin_name"; then
+        ENABLED_PLUGINS+=("$plugin_name")
+        print_success "Loaded plugin: $plugin_name"
         return 0
     else
-        print_error "Failed to load plugin: $plugin_name"
         return 1
     fi
 }
 
-# Register a plugin hook
-register_hook() {
-    local hook_point="$1"
-    local plugin_name="$2"
-    local function_name="$3"
+load_all_plugins() {
+    local plugins
+    plugins=($(discover_plugins))
     
-    if [[ -z "${PLUGIN_HOOKS[$hook_point]:-}" ]]; then
-        PLUGIN_HOOKS[$hook_point]="$plugin_name:$function_name"
+    print_info "Discovering plugins..."
+    
+    for plugin in "${plugins[@]}"; do
+        load_plugin "$plugin"
+    done
+    
+    if [[ ${#ENABLED_PLUGINS[@]} -gt 0 ]]; then
+        print_success "Loaded ${#ENABLED_PLUGINS[@]} plugin(s)"
     else
-        PLUGIN_HOOKS[$hook_point]="${PLUGIN_HOOKS[$hook_point]},$plugin_name:$function_name"
+        print_warn "No plugins loaded"
     fi
-    
-    print_info "Registered hook: $hook_point -> $plugin_name::$function_name"
-}
-
-# Execute hooks at a specific point
-execute_hooks() {
-    local hook_point="$1"
-    shift
-    local hook_args=("$@")
-    
-    local hooks="${PLUGIN_HOOKS[$hook_point]:-}"
-    
-    if [[ -z "$hooks" ]]; then
-        return 0
-    fi
-    
-    print_info "Executing hooks for: $hook_point"
-    
-    IFS=',' read -ra HOOK_LIST <<< "$hooks"
-    for hook in "${HOOK_LIST[@]}"; do
-        local plugin_name="${hook%%:*}"
-        local function_name="${hook##*:}"
-        
-        if declare -f "$function_name" &>/dev/null; then
-            print_info "  → ${plugin_name}::${function_name}"
-            "$function_name" "${hook_args[@]}" || true
-        fi
-    done
-}
-
-# List loaded plugins
-list_loaded_plugins() {
-    if [[ ${#LOADED_PLUGINS[@]} -eq 0 ]]; then
-        print_info "No plugins loaded"
-        return 0
-    fi
-    
-    print_info "Loaded plugins:"
-    for plugin_name in "${!LOADED_PLUGINS[@]}"; do
-        echo "  - $plugin_name (${LOADED_PLUGINS[$plugin_name]})"
-    done
-}
-
-# Unload a plugin
-unload_plugin() {
-    local plugin_name="$1"
-    
-    if [[ -z "${LOADED_PLUGINS[$plugin_name]:-}" ]]; then
-        print_warn "Plugin not loaded: $plugin_name"
-        return 1
-    fi
-    
-    # Call plugin cleanup if exists
-    if declare -f "plugin_${plugin_name}_cleanup" &>/dev/null; then
-        "plugin_${plugin_name}_cleanup"
-    fi
-    
-    unset "LOADED_PLUGINS[$plugin_name]"
-    print_success "Plugin unloaded: $plugin_name"
 }
 
 #==============================================================================
@@ -165,34 +125,18 @@ unload_plugin() {
 #==============================================================================
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    case "${1:-}" in
-        discover)
-            discover_plugins "${2:-./plugins}"
+    case "${1:-list}" in
+        list)
+            discover_plugins
             ;;
         load)
-            if [[ -z "${2:-}" ]]; then
-                print_error "Plugin name required"
-                exit 1
-            fi
-            load_plugin "$2" "${3:-./plugins}"
+            load_plugin "$2"
             ;;
-        list)
-            list_loaded_plugins
+        validate)
+            validate_plugin "$2"
             ;;
         *)
-            cat << EOF
-Usage: $0 <command> [arguments]
-
-Commands:
-    discover [plugin_dir]         Discover available plugins
-    load <plugin> [plugin_dir]    Load a plugin
-    list                          List loaded plugins
-
-Examples:
-    $0 discover
-    $0 load slack_notify
-    $0 list
-EOF
+            echo "Usage: $0 {list|load <name>|validate <name>}"
             exit 1
             ;;
     esac

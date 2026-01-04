@@ -87,6 +87,12 @@ source "${SCRIPT_DIR}/lib/cvss_calculator.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/writeup_generator.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/exporters/csv_exporter.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/exporters/markdown_exporter.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/owasp_scanner.sh" 2>/dev/null || true
+
+# Phase 2: Advanced modules
+source "${SCRIPT_DIR}/lib/orchestrator.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/intelligence_engine.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/report_engine/generator.sh" 2>/dev/null || true
 
 #==============================================================================
 # VARIABLES
@@ -114,6 +120,11 @@ GENERATE_WRITEUP=false
 WRITEUP_FORMAT="markdown"
 OWASP_SCAN=false
 API_SCAN=false
+
+# Advanced features (Phase 2)
+ORCHESTRATE=false
+INTEL_ENRICH=false
+PROFESSIONAL_REPORT=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -188,6 +199,10 @@ Options:
     -E, --evidence      Enable auto-evidence collection (Default: ON)
     --no-evidence       Disable auto-evidence collection
     -C, --chains        Enable vulnerability chain tracking
+    --owasp             Run OWASP Top 10 focused scan
+    --orchestrate       Use intelligent orchestration engine
+    --intel             Enable CVE correlation and exploit mapping
+    --professional      Generate professional pentest report (exec summary + findings)
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
@@ -293,6 +308,10 @@ parse_args() {
             -E|--evidence) EVIDENCE_MODE=true; shift ;;
             --no-evidence) EVIDENCE_MODE=false; shift ;;
             -C|--chains) TRACK_CHAINS=true; shift ;;
+            --owasp) OWASP_SCAN=true; shift ;;
+            --orchestrate) ORCHESTRATE=true; shift ;;
+            --intel) INTEL_ENRICH=true; shift ;;
+            --professional) PROFESSIONAL_REPORT=true; INTEL_ENRICH=true; shift ;;
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
             -h) 
@@ -697,6 +716,13 @@ main() {
                         export_to_json "$TARGET" "$REPORT_DIR" "$SCAN_TYPE"
                     fi
                 fi
+                
+                # Run OWASP Top 10 scan if enabled
+                if [[ "$OWASP_SCAN" == "true" ]] && declare -f run_owasp_scan &>/dev/null; then
+                    echo ""
+                    run_owasp_scan "$TARGET" "$PORT" "$PROTOCOL"
+                fi
+                
                 xss_vulnerability_scan
                 cms_detection_scan
                 ;;

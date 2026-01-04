@@ -1,0 +1,21 @@
+# Example WAES Plugin
+
+name: Custom API Scanner
+version: 1.0.0
+author: security@example.com
+description: Tests RESTful APIs for common vulnerabilities
+
+# Hook points this plugin listens to
+hooks:
+  - post_discovery
+  - pre_reporting
+
+# Required tools
+dependencies:
+  - jq
+  - curl
+
+# Configuration
+config:
+  timeout: 30
+  max_endpoints: 100

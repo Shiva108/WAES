@@ -1,0 +1,23 @@
+{
+  "CVE-2021-41773": {
+    "description": "Apache HTTP Server 2.4.49 Path Traversal",
+    "cvss": 9.8,
+    "published": "2021-10-05",
+    "affected": ["Apache HTTP Server 2.4.49"],
+    "exploitability": "high"
+  },
+  "CVE-2021-44228": {
+    "description": "Log4j Remote Code Execution",
+    "cvss": 10.0,
+    "published": "2021-12-10",
+    "affected": ["Log4j 2.0-beta9 to 2.14.1"],
+    "exploitability": "high"
+  },
+  "CVE-2022-22965": {
+    "description": "Spring4Shell Remote Code Execution",
+    "cvss": 9.8,
+    "published": "2022-04-01",
+    "affected": ["Spring Framework 5.3.0 to 5.3.17"],
+    "exploitability": "high"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "CVE-2021-41773": {
+    "module": "exploit/linux/http/apache_normalize_path",
+    "rank": "excellent"
+  },
+  "CVE-2021-44228": {
+    "module": "exploit/multi/http/log4shell",
+    "rank": "excellent"
+  }
+}
