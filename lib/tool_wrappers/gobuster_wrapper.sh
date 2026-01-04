@@ -19,7 +19,6 @@ run_gobuster_with_evasion() {
         # Standard gobuster scan
         gobuster dir -u "$url" -w "$wordlist" \
                  -t "${GOBUSTER_THREADS:-10}" \
-                 --wildcard \
                  -o "$output_file" 2>&1
         return $?
     fi
@@ -56,7 +55,6 @@ run_gobuster_with_evasion() {
         --useragent "$user_agent" \
         --delay "${delay_sec}s" \
         -t "$threads" \
-        --wildcard \
         --no-error \
         -o "$output_file" 2>&1
 }

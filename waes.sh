@@ -557,7 +557,7 @@ fuzzing_scan() {
             else
                 # Standard gobuster
                 gobuster dir -u "$base_url" -w "$wordlist" \
-                    -t "${GOBUSTER_THREADS:-10}" --wildcard 2>&1 \
+                    -t "${GOBUSTER_THREADS:-10}" 2>&1 \
                     | tee "${REPORT_DIR}/${TARGET}_gobuster.txt"
             fi
         else
@@ -731,6 +731,11 @@ main() {
                 deep_scan
                 fuzzing_scan
                 standard_scan
+                # Enable security tests for deep scan
+                SQLI_TEST=true
+                AUTH_TEST=true
+                API_SECURITY_TEST=true
+                UPLOAD_TEST=true
                 ;;
             advanced)
                 passive_scan

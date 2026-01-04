@@ -123,7 +123,6 @@ run_gobuster() {
         -w "$wordlist" \
         -t "$THREADS" \
         -s "$STATUS_CODES" \
-        --wildcard \
         --no-error \
         $extra_args 2>/dev/null || true
 }
