@@ -162,3 +162,23 @@ ensure_report_dir() {
         mkdir -p "$REPORT_DIR"
     fi
 }
+
+#==============================================================================
+# WAF EVASION SETTINGS
+#==============================================================================
+
+# WAF Detection & Evasion
+WAF_DETECTION_ENABLED=true
+WAF_EVASION_ENABLED=true
+WAF_EVASION_LEVEL="moderate"  # low, moderate, high, paranoid
+WAF_PROFILES_DIR="${SCRIPT_DIR}/lib/waf_profiles"
+
+# Evasion Timing (milliseconds)
+DEFAULT_REQUEST_DELAY=1000
+MAX_REQUEST_DELAY=5000
+RANDOMIZE_DELAYS=true
+
+# Export for use by other scripts
+export WAF_DETECTION_ENABLED
+export WAF_EVASION_ENABLED
+export WAF_EVASION_LEVEL

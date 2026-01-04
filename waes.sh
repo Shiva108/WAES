@@ -369,11 +369,21 @@ deep_scan() {
         fi
     fi
     
-    # Nikto
+    # Nikto with evasion support
     if command_exists nikto; then
         print_running "nikto - Web server scanner"
-        nikto -h "${PROTOCOL}://${TARGET}" -port "$PORT" -C all -ask no -evasion A 2>&1 \
-            | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
+        
+        # Use wrapper if evasion is enabled
+        if [[ "${EVASION_ENABLED:-false}" == "true" ]] && [[ -x "${SCRIPT_DIR}/lib/tool_wrappers/nikto_wrapper.sh" ]]; then
+            local evasion_level="${WAF_EVASION_LEVEL:-moderate}"
+            print_info "Running Nikto with evasion (level: $evasion_level)"
+            "${SCRIPT_DIR}/lib/tool_wrappers/nikto_wrapper.sh" "$TARGET" "$PORT" "$PROTOCOL" \
+                "${REPORT_DIR}/${TARGET}_nikto.txt" "$evasion_level" | tee -a "${REPORT_DIR}/${TARGET}_scan.log"
+        else
+            # Standard nikto
+            nikto -h "${PROTOCOL}://${TARGET}" -port "$PORT" -C all -ask no -evasion A 2>&1 \
+                | tee "${REPORT_DIR}/${TARGET}_nikto.txt"
+        fi
     fi
     
     # Uniscan (optional)
@@ -403,9 +413,18 @@ fuzzing_scan() {
             wordlist="/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt"
         
         if [[ -f "$wordlist" ]]; then
-            gobuster dir -u "$base_url" -w "$wordlist" \
-                -t "${GOBUSTER_THREADS:-10}" --wildcard 2>&1 \
-                | tee "${REPORT_DIR}/${TARGET}_gobuster.txt"
+            # Use wrapper if evasion is enabled
+            if [[ "${EVASION_ENABLED:-false}" == "true" ]] && [[ -x "${SCRIPT_DIR}/lib/tool_wrappers/gobuster_wrapper.sh" ]]; then
+                local evasion_level="${WAF_EVASION_LEVEL:-moderate}"
+                print_info "Running Gobuster with evasion (level: $evasion_level)"
+                "${SCRIPT_DIR}/lib/tool_wrappers/gobuster_wrapper.sh" "$base_url" "$wordlist" \
+                    "${REPORT_DIR}/${TARGET}_gobuster.txt" "$evasion_level" | tee -a "${REPORT_DIR}/${TARGET}_scan.log"
+            else
+                # Standard gobuster
+                gobuster dir -u "$base_url" -w "$wordlist" \
+                    -t "${GOBUSTER_THREADS:-10}" --wildcard 2>&1 \
+                    | tee "${REPORT_DIR}/${TARGET}_gobuster.txt"
+            fi
         else
             print_warn "No wordlist found for gobuster"
         fi
