@@ -117,6 +117,8 @@ source "${SCRIPT_DIR}/lib/osint/social_intel.sh" 2>/dev/null || true
 
 # Phase 6: Vulnerability scanners
 source "${SCRIPT_DIR}/lib/scanners/nuclei_scanner.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/scanners/fuzzer.sh" 2>/dev/null || true
+source "${SCRIPT_DIR}/lib/js_analyzer.sh" 2>/dev/null || true
 
 #==============================================================================
 # PROFILE SYSTEM - Unified scan configurations
@@ -130,64 +132,29 @@ apply_profile() {
         quick|fast)
             # Quick reconnaissance: 2-3 minutes
             SCAN_TYPE="fast"
-            ANALYZE_SCAN=true
+            DNS_RECON=true
+            TECH_FINGERPRINT=true
             ;;
+            
         standard|default)
-            # Balanced scan: 10-15 minutes (default)
+            # Balanced scan: 10-15 minutes (DEFAULT)
             SCAN_TYPE="full"
+            DNS_RECON=true
+            SSL_ANALYZE=true
+            TECH_FINGERPRINT=true
             ANALYZE_SCAN=true
-            ORCHESTRATE=true
             ;;
+            
         comprehensive|full)
             # Full assessment: 30-45 minutes
             SCAN_TYPE="deep"
+            # Security tests
             FULL_SECURITY_TEST=true
             SQLI_TEST=true
             AUTH_TEST=true
             API_SECURITY_TEST=true
             UPLOAD_TEST=true
-            FULL_ENUM=true
-            DNS_RECON=true
-            SSL_ANALYZE=true
-            METADATA_EXTRACT=true
-            CLOUD_ENUM=true
-            USER_ENUM=true
-            TECH_FINGERPRINT=true
-            INTEL_ENRICH=true
-            PROFESSIONAL_REPORT=true
-            ANALYZE_SCAN=true
-            NUCLEI_SCAN=true
-            NUCLEI_PROFILE="comprehensive"
-            ;;
-        ctf)
-            # CTF competition mode
-            SCAN_TYPE="full"
-            GENERATE_WRITEUP=true
-            TRACK_CHAINS=true
-            ANALYZE_SCAN=true
-            DNS_RECON=true
-            TECH_FINGERPRINT=true
-            ;;
-        bugbounty|bb)
-            # Bug bounty hunting
-            SCAN_TYPE="full"
-            DNS_RECON=true
-            CLOUD_ENUM=true
-            SQLI_TEST=true
-            AUTH_TEST=true
-            API_SECURITY_TEST=true
-            SSL_ANALYZE=true
-            USER_ENUM=true
-            ANALYZE_SCAN=true
-            ;;
-        pentest|professional)
-            # Professional pentest engagement
-            SCAN_TYPE="advanced"
-            FULL_SECURITY_TEST=true
-            SQLI_TEST=true
-            AUTH_TEST=true
-            API_SECURITY_TEST=true
-            UPLOAD_TEST=true
+            # Enumeration (all modules)
             FULL_ENUM=true
             DNS_RECON=true
             SSL_ANALYZE=true
@@ -198,21 +165,99 @@ apply_profile() {
             HISTORICAL_ANALYSIS=true
             API_DISCOVERY=true
             SOCIAL_OSINT=true
+            # Intelligence & scanning
+            INTEL_ENRICH=true
+            PROFESSIONAL_REPORT=true
+            ANALYZE_SCAN=true
+            # Advanced tools
+            NUCLEI_SCAN=true
+            NUCLEI_PROFILE="comprehensive"
+            FUZZ_ENABLED=true
+            JS_ANALYZE=true
+            ;;
+            
+        ctf)
+            # CTF competition mode: 5-10 minutes
+            SCAN_TYPE="full"
+            GENERATE_WRITEUP=true
+            TRACK_CHAINS=true
+            ANALYZE_SCAN=true
+            DNS_RECON=true
+            TECH_FINGERPRINT=true
+            SQLI_TEST=true
+            FUZZ_DIRS=true
+            FUZZ_PARAMS=true
+            ;;
+            
+        bugbounty|bb)
+            # Bug bounty hunting: 20-30 minutes
+            SCAN_TYPE="full"
+            # Security tests
+            FULL_SECURITY_TEST=true
+            SQLI_TEST=true
+            AUTH_TEST=true
+            API_SECURITY_TEST=true
+            # Enumeration
+            FULL_ENUM=true
+            DNS_RECON=true
+            CLOUD_ENUM=true
+            SSL_ANALYZE=true
+            USER_ENUM=true
+            TECH_FINGERPRINT=true
+            API_DISCOVERY=true
+            # Intelligence & scanning
+            ANALYZE_SCAN=true
+            # Advanced tools (critical for bug hunting)
+            NUCLEI_SCAN=true
+            NUCLEI_PROFILE="bugbounty"
+            FUZZ_ENABLED=true
+            JS_ANALYZE=true
+            ;;
+            
+        pentest|professional)
+            # Professional pentest engagement: 45-60 minutes
+            SCAN_TYPE="advanced"
+            # Security tests (all)
+            FULL_SECURITY_TEST=true
+            SQLI_TEST=true
+            AUTH_TEST=true
+            API_SECURITY_TEST=true
+            UPLOAD_TEST=true
+            # Enumeration (all modules)
+            FULL_ENUM=true
+            DNS_RECON=true
+            SSL_ANALYZE=true
+            METADATA_EXTRACT=true
+            CLOUD_ENUM=true
+            USER_ENUM=true
+            TECH_FINGERPRINT=true
+            HISTORICAL_ANALYSIS=true
+            API_DISCOVERY=true
+            SOCIAL_OSINT=true
+            # Compliance & intelligence
             PROFESSIONAL_REPORT=true
             EMAIL_COMPLIANCE=true
             INTEL_ENRICH=true
             OWASP_SCAN=true
             ANALYZE_SCAN=true
+            # Advanced tools
             NUCLEI_SCAN=true
             NUCLEI_PROFILE="pentest"
+            FUZZ_DIRS=true
+            FUZZ_PARAMS=true
+            FUZZ_API=true
+            JS_ANALYZE=true
             ;;
+            
         *)
             print_warn "Unknown profile: $profile (using 'standard')"
             apply_profile "standard"
+            return
             ;;
     esac
+    
+    print_info "Applied profile: $profile"
 }
-
 #==============================================================================
 # VARIABLES
 #==============================================================================
@@ -274,6 +319,16 @@ NUCLEI_PROFILE="standard"  # quick, bugbounty, pentest, comprehensive
 NUCLEI_SEVERITY="critical,high"
 NUCLEI_TAGS=""
 NUCLEI_UPDATE_TEMPLATES=false
+
+# Fuzzing flags (Phase 7)
+FUZZ_ENABLED=false
+FUZZ_PARAMS=false
+FUZZ_DIRS=false
+FUZZ_HEADERS=false
+FUZZ_API=false
+
+# JavaScript analysis (Phase 8)
+JS_ANALYZE=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -402,6 +457,13 @@ Vulnerability Scanning:
     --nuclei-tags <tags> Template tags to include
     --nuclei-update     Update nuclei templates before scanning
 
+Fuzzing:
+    --fuzz              Enable fuzzing (all types)
+    --fuzz-params       Fuzz GET parameters
+    --fuzz-dirs         Fuzz directories/paths
+    --fuzz-headers      Fuzz HTTP headers
+    --fuzz-api          Fuzz API endpoints
+
 Intelligence:
     --analyze           Intelligent scan analysis
     --orchestrate       Intelligent orchestration
@@ -528,6 +590,13 @@ parse_args() {
             --nuclei-severity) NUCLEI_SEVERITY="$2"; shift 2 ;;
             --nuclei-tags) NUCLEI_TAGS="$2"; shift 2 ;;
             --nuclei-update) NUCLEI_UPDATE_TEMPLATES=true; shift ;;
+            
+            # Fuzzing flags
+            --fuzz) FUZZ_ENABLED=true; FUZZ_PARAMS=true; FUZZ_DIRS=true; FUZZ_HEADERS=true; FUZZ_API=true; shift ;;
+            --fuzz-params) FUZZ_PARAMS=true; shift ;;
+            --fuzz-dirs) FUZZ_DIRS=true; shift ;;
+            --fuzz-headers) FUZZ_HEADERS=true; shift ;;
+            --fuzz-api) FUZZ_API=true; shift ;;
             
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
@@ -1121,6 +1190,60 @@ main() {
             else
                 print_warn "Nuclei scanner module not loaded"
             fi
+        fi
+        
+        # Run fuzzing if enabled
+        if [[ "$FUZZ_PARAMS" == "true" ]] || [[ "$FUZZ_DIRS" == "true" ]] || \
+           [[ "$FUZZ_HEADERS" == "true" ]] || [[ "$FUZZ_API" == "true" ]] || \
+           [[ "$FUZZ_ENABLED" == "true" ]]; then
+            
+            echo ""
+            print_header "Web Application Fuzzing"
+            
+            local base_url="${PROTOCOL}://${TARGET}"
+            [[ "$PORT" != "80" ]] && [[ "$PORT" != "443" ]] && base_url+=":${PORT}"
+            
+            # Parameter fuzzing
+            if [[ "$FUZZ_PARAMS" == "true" ]] || [[ "$FUZZ_ENABLED" == "true" ]]; then
+                print_info "Fuzzing GET parameters..."
+                if declare -f fuzz_parameters &>/dev/null; then
+                    fuzz_parameters "$base_url" "$REPORT_DIR"
+                else
+                    print_warn "Fuzzer module not loaded"
+                fi
+            fi
+            
+            # Directory fuzzing
+            if [[ "$FUZZ_DIRS" == "true" ]] || [[ "$FUZZ_ENABLED" == "true" ]]; then
+                print_info "Fuzzing directories..."
+                if declare -f fuzz_directories &>/dev/null; then
+                    fuzz_directories "$base_url" "$REPORT_DIR"
+                else
+                    print_warn "Fuzzer module not loaded"
+                fi
+            fi
+            
+            # Header fuzzing
+            if [[ "$FUZZ_HEADERS" == "true" ]] || [[ "$FUZZ_ENABLED" == "true" ]]; then
+                print_info "Fuzzing HTTP headers..."
+                if declare -f fuzz_headers &>/dev/null; then
+                    fuzz_headers "$base_url" "$REPORT_DIR"
+                else
+                    print_warn "Fuzzer module not loaded"
+                fi
+            fi
+            
+            # API endpoint fuzzing
+            if [[ "$FUZZ_API" == "true" ]] || [[ "$FUZZ_ENABLED" == "true" ]]; then
+                print_info "Fuzzing API endpoints..."
+                if declare -f fuzz_api_endpoints &>/dev/null; then
+                    fuzz_api_endpoints "$base_url" "$REPORT_DIR"
+                else
+                    print_warn "Fuzzer module not loaded"
+                fi
+            fi
+            
+            print_success "Fuzzing completed"
         fi
         
         print_success "Scan completed for: $TARGET"

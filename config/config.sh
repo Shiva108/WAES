@@ -83,6 +83,7 @@ OPTIONAL_TOOLS=(
     "feroxbuster"
     "xsser"
     "nuclei"
+    "ffuf"
 )
 
 # Gobuster status codes to report
