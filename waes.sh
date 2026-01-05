@@ -116,6 +116,97 @@ source "${SCRIPT_DIR}/lib/api_discovery.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/osint/social_intel.sh" 2>/dev/null || true
 
 #==============================================================================
+# PROFILE SYSTEM - Unified scan configurations
+#==============================================================================
+
+# Apply a named profile - sets multiple flags at once
+apply_profile() {
+    local profile="${1:-standard}"
+    
+    case "$profile" in
+        quick|fast)
+            # Quick reconnaissance: 2-3 minutes
+            SCAN_TYPE="fast"
+            ANALYZE_SCAN=true
+            ;;
+        standard|default)
+            # Balanced scan: 10-15 minutes (default)
+            SCAN_TYPE="full"
+            ANALYZE_SCAN=true
+            ORCHESTRATE=true
+            ;;
+        comprehensive|full)
+            # Full assessment: 30-45 minutes
+            SCAN_TYPE="deep"
+            FULL_SECURITY_TEST=true
+            SQLI_TEST=true
+            AUTH_TEST=true
+            API_SECURITY_TEST=true
+            UPLOAD_TEST=true
+            FULL_ENUM=true
+            DNS_RECON=true
+            SSL_ANALYZE=true
+            METADATA_EXTRACT=true
+            CLOUD_ENUM=true
+            USER_ENUM=true
+            TECH_FINGERPRINT=true
+            INTEL_ENRICH=true
+            PROFESSIONAL_REPORT=true
+            ANALYZE_SCAN=true
+            ;;
+        ctf)
+            # CTF competition mode
+            SCAN_TYPE="full"
+            GENERATE_WRITEUP=true
+            TRACK_CHAINS=true
+            ANALYZE_SCAN=true
+            DNS_RECON=true
+            TECH_FINGERPRINT=true
+            ;;
+        bugbounty|bb)
+            # Bug bounty hunting
+            SCAN_TYPE="full"
+            DNS_RECON=true
+            CLOUD_ENUM=true
+            SQLI_TEST=true
+            AUTH_TEST=true
+            API_SECURITY_TEST=true
+            SSL_ANALYZE=true
+            USER_ENUM=true
+            ANALYZE_SCAN=true
+            ;;
+        pentest|professional)
+            # Professional pentest engagement
+            SCAN_TYPE="advanced"
+            FULL_SECURITY_TEST=true
+            SQLI_TEST=true
+            AUTH_TEST=true
+            API_SECURITY_TEST=true
+            UPLOAD_TEST=true
+            FULL_ENUM=true
+            DNS_RECON=true
+            SSL_ANALYZE=true
+            METADATA_EXTRACT=true
+            CLOUD_ENUM=true
+            USER_ENUM=true
+            TECH_FINGERPRINT=true
+            HISTORICAL_ANALYSIS=true
+            API_DISCOVERY=true
+            SOCIAL_OSINT=true
+            PROFESSIONAL_REPORT=true
+            EMAIL_COMPLIANCE=true
+            INTEL_ENRICH=true
+            OWASP_SCAN=true
+            ANALYZE_SCAN=true
+            ;;
+        *)
+            print_warn "Unknown profile: $profile (using 'standard')"
+            apply_profile "standard"
+            ;;
+    esac
+}
+
+#==============================================================================
 # VARIABLES
 #==============================================================================
 
@@ -226,71 +317,85 @@ show_banner() {
 
 usage() {
     cat << EOF
-Usage: ${0##*/} [OPTIONS] -u <target>
+Usage: ${0##*/} -u <target> [--profile <name>]
 
-Options:
-    -u <target>     Target IP or domain (required, or use --targets)
+PROFILES (Recommended):
+    quick          Fast reconnaissance (2-3 min)
+    standard       Balanced scan (10-15 min) [default]
+    comprehensive  Full security assessment (30-45 min)
+    ctf            CTF competition mode (writeup + chains)
+    bugbounty      Bug bounty hunting (vuln-focused)
+    pentest        Professional engagement (everything)
+
+CORE OPTIONS:
+    -u <target>     Target IP or domain (required)
     -p <port>       Port number (default: 80 and 443)
-    -s              Use HTTPS protocol
-    -t <type>       Scan type: fast, full, deep, advanced (default: full)
-    --profile <p>   Use scan profile (ctf-box, web-app, bug-bounty, quick-scan)
-    --targets <f>   Scan multiple targets from file (supports CIDR)
+    --profile <p>   Use scan profile (see above)
+    --targets <f>   Scan multiple targets from file
     --parallel      Enable parallel scanning (faster)
-    -r              Resume previous scan
+
+OUTPUT OPTIONS:
     -H              Generate HTML report
     -J              Generate JSON report
-    -w, --writeup       Generate CTF writeup (markdown)
-    -E, --evidence      Enable auto-evidence collection (Default: ON)
-    --no-evidence       Disable auto-evidence collection
-    -C, --chains        Enable vulnerability chain tracking
-    --owasp             Run OWASP Top 10 focused scan
-    --email-compliance  Test domain email authentication (SPF/DKIM/DMARC)
-    --sqli              Run SQL injection tests
-    --auth-test         Run authentication/session security tests
-    --api-scan          Run API security tests
-    --upload-test       Run file upload vulnerability tests
-    --full-security     Run all security tests (SQLi, auth, API, upload)
-    --analyze           Generate intelligent analysis of scan results
-    --orchestrate       Use intelligent orchestration engine
-    --intel             Enable CVE correlation and exploit mapping
-    --professional      Generate professional pentest report (exec summary + findings)
+    -w, --writeup   Generate CTF writeup (markdown)
+    --professional  Generate professional pentest report
 
-Enumeration Options:
-    --dns-recon         Advanced DNS/subdomain reconnaissance
-    --ssl-analyze       SSL/TLS certificate and security analysis
-    --metadata          Extract metadata from documents
-    --cloud-enum        Enumerate cloud storage (S3, Azure, GCP)
-    --user-enum         User/email enumeration
-    --tech-stack        Technology stack fingerprinting
-    --historical        Historical/Wayback analysis
-    --api-discover      API endpoint discovery
-    --social-osint      Social media OSINT
-    --full-enum         Enable ALL enumeration modules
-
+VERBOSITY:
     -v              Verbose output
     -q              Quiet mode (minimal output)
     -h              Show this help message
+    --help-advanced Show all granular options
+
+EXAMPLES:
+    ${0##*/} -u example.com                    # Standard scan
+    ${0##*/} -u example.com --profile quick    # Fast recon
+    ${0##*/} -u example.com --profile pentest  # Full engagement
+    ${0##*/} -u example.com --profile ctf -H   # CTF mode + HTML report
+EOF
+}
+
+usage_advanced() {
+    cat << EOF
+ADVANCED OPTIONS (for granular control):
 
 Scan Types:
-    fast     - Quick reconnaissance (wafw00f, nmap http-enum)
-    full     - Standard scan (adds nikto, nmap scripts) [default]
-    deep     - Comprehensive (adds vulscan, uniscan, fuzzing)
-    advanced - Deep + SSL/TLS, XSS testing, CMS-specific scans
+    -t <type>       Scan type: fast, full, deep, advanced
 
-Profiles:
-    ctf-box      - Aggressive scanning for CTF machines
-    web-app      - Professional web application testing
-    bug-bounty   - Careful, stealthy scanning
-    quick-scan   - Fast reconnaissance only
+Security Testing:
+    --sqli              SQL injection tests
+    --auth-test         Authentication/session tests
+    --api-scan          API security tests
+    --upload-test       File upload vulnerability tests
+    --full-security     All security tests combined
+    --owasp             OWASP Top 10 focused scan
 
-Examples:
-    ${0##*/} -u 10.10.10.130
-    ${0##*/} -u 10.10.10.130 -p 8080
-    ${0##*/} -u example.com -s -t advanced -H -J
-    ${0##*/} -u example.com --profile ctf-box --parallel
-    ${0##*/} --targets targets.txt -t deep -H
-    ${0##*/} -u example.com -r  # Resume previous scan
+Enumeration:
+    --dns-recon         Advanced DNS/subdomain reconnaissance
+    --ssl-analyze       SSL/TLS certificate analysis
+    --metadata          Document metadata extraction
+    --cloud-enum        Cloud storage enumeration (S3, Azure, GCP)
+    --user-enum         User/email enumeration
+    --tech-stack        Technology fingerprinting
+    --historical        Historical/Wayback analysis
+    --api-discover      API endpoint discovery
+    --social-osint      Social media OSINT
+    --full-enum         All enumeration modules
 
+Intelligence:
+    --analyze           Intelligent scan analysis
+    --orchestrate       Intelligent orchestration
+    --intel             CVE correlation and exploit mapping
+    --email-compliance  Email authentication testing (SPF/DKIM/DMARC)
+
+Other:
+    -r                  Resume previous scan
+    -E, --evidence      Enable auto-evidence collection
+    --no-evidence       Disable auto-evidence collection
+    -C, --chains        Enable vulnerability chain tracking
+    -s                  Use HTTPS protocol
+
+NOTE: Most users should use --profile instead of individual flags.
+      Profiles are pre-configured combinations optimized for common use cases.
 EOF
 }
 
@@ -403,6 +508,12 @@ parse_args() {
                 usage
                 exit 0
                 ;;
+            --help-advanced)
+                usage
+                echo ""
+                usage_advanced
+                exit 0
+                ;;
             *)
                 print_error "Unknown option: $1"
                 usage
@@ -423,9 +534,15 @@ parse_args() {
     
     # Require target if not batch mode
     if [[ -z "$TARGET" ]]; then
-        print_error "Target required (use -u or --targets)"
+        print_error "Target is required. Use -u <target> or --targets <file>"
         usage
         exit 1
+    fi
+    
+    # Apply profile if specified, otherwise use 'standard' as default
+    if [[ -n "$USE_PROFILE" ]]; then
+        print_info "Applying profile: $USE_PROFILE"
+        apply_profile "$USE_PROFILE"
     fi
     
     # Validate port(s)

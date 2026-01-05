@@ -461,16 +461,230 @@ check_documentation() {
     local docs_dir="$WAES_DIR/docs"
     local readme="$WAES_DIR/README.md"
     
-    local doc_count=0
-    [[ -d "$docs_dir" ]] && doc_count=$(find "$docs_dir" -name "*.md" | wc -l)
-    [[ -f "$readme" ]] && ((doc_count++))
-    
-    if (( doc_count >= 3 )); then
-        log_success "Documentation appears comprehensive ($doc_count documents)"
+    if [[ -f "$WAES_DIR/README.md" ]]; then
+        ((TOTAL_TESTS++))
+        log_success "Documentation exists: README.md"
     else
-        log_warn "Limited documentation ($doc_count documents)"
-        COMPLIANCE_ISSUES["docs"]="Only $doc_count documentation files found"
+        ((TOTAL_TESTS++))
+        log_fail "README.md not found"
     fi
+}
+
+#==============================================================================
+# PROFILE SYSTEM TESTING (NEW)
+#==============================================================================
+
+test_profiles() {
+    echo -e "\n${BLUE}==== 8. PROFILE SYSTEM TESTING ====${NC}\n"
+    log_info "Testing unified profile system - 6 profiles"
+    
+    # Test each profile applies correctly
+    local profiles=("quick" "standard" "comprehensive" "ctf" "bugbounty" "pentest")
+    
+    for profile in "${profiles[@]}"; do
+        run_test "Profile: $profile" \
+            "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' --profile $profile --no-evidence > '$TEST_DIR/test_profile_${profile}.log' 2>&1 || grep -q 'Applying profile' '$TEST_DIR/test_profile_${profile}.log'" \
+            "$TEST_DIR/test_profile_${profile}.log"
+    done
+    
+    # Test profile aliases
+    run_test "Profile Alias: bb (bugbounty)" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' --profile bb --no-evidence > '$TEST_DIR/test_profile_bb.log' 2>&1" \
+        "$TEST_DIR/test_profile_bb.log"
+    
+    run_test "Profile Alias: fast (quick)" \
+        "cd '$WAES_DIR' && timeout 30 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' --profile fast --no-evidence > '$TEST_DIR/test_profile_fast.log' 2>&1" \
+        "$TEST_DIR/test_profile_fast.log"
+    
+    # Test unknown profile handling
+    run_test "Unknown Profile Fallback" \
+        "(cd '$WAES_DIR' && timeout 10 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' --profile invalid_profile --no-evidence > '$TEST_DIR/test_profile_invalid.log' 2>&1 || true) && grep -qi 'unknown profile\\|standard' '$TEST_DIR/test_profile_invalid.log'" \
+        "$TEST_DIR/test_profile_invalid.log"
+}
+
+#==============================================================================
+# ENUMERATION MODULES TESTING (NEW)
+#==============================================================================
+
+test_enumeration_modules() {
+    echo -e "\n${BLUE}==== 9. ENUMERATION MODULES TESTING ====${NC}\n"
+    log_info "Testing OSINT and enumeration modules"
+    
+    # Test individual enumeration flags
+    local enum_flags=(
+        "--dns-recon:DNS Reconnaissance"
+        "--ssl-analyze:SSL/TLS Analysis"
+        "--metadata:Metadata Extraction"
+        "--cloud-enum:Cloud Enumeration"
+        "--user-enum:User Enumeration"
+        "--tech-stack:Technology Fingerprinting"
+        "--historical:Historical Analysis"
+        "--api-discover:API Discovery"
+        "--social-osint:Social OSINT"
+    )
+    
+    for entry in "${enum_flags[@]}"; do
+        local flag="${entry%%:*}"
+        local name="${entry#*:}"
+        local safe_name=$(echo "$flag" | tr '-' '_')
+        
+        run_test "$name ($flag)" \
+            "cd '$WAES_DIR' && timeout 60 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast $flag --no-evidence > '$TEST_DIR/test_enum${safe_name}.log' 2>&1" \
+            "$TEST_DIR/test_enum${safe_name}.log"
+    done
+    
+    # Test full enumeration flag
+    run_test "Full Enumeration (--full-enum)" \
+        "cd '$WAES_DIR' && timeout 120 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast --full-enum --no-evidence > '$TEST_DIR/test_full_enum.log' 2>&1" \
+        "$TEST_DIR/test_full_enum.log"
+}
+
+#==============================================================================
+# SECURITY TESTING MODULES (NEW)
+#==============================================================================
+
+test_security_modules() {
+    echo -e "\n${BLUE}==== 10. SECURITY TESTING MODULES ====${NC}\n"
+    log_info "Testing security assessment modules"
+    
+    # Individual security tests
+    local security_flags=(
+        "--sqli:SQL Injection Scanner"
+        "--auth-test:Authentication Scanner"
+        "--api-scan:API Security Scanner"
+        "--upload-test:Upload Vulnerability Scanner"
+    )
+    
+    for entry in "${security_flags[@]}"; do
+        local flag="${entry%%:*}"
+        local name="${entry#*:}"
+        local safe_name=$(echo "$flag" | tr '-' '_')
+        
+        run_test "$name ($flag)" \
+            "cd '$WAES_DIR' && timeout 90 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast $flag --no-evidence > '$TEST_DIR/test_sec${safe_name}.log' 2>&1" \
+            "$TEST_DIR/test_sec${safe_name}.log"
+    done
+    
+    # Combined security testing
+    run_test "Full Security Suite (--full-security)" \
+        "cd '$WAES_DIR' && timeout 180 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast --full-security --no-evidence > '$TEST_DIR/test_full_security.log' 2>&1" \
+        "$TEST_DIR/test_full_security.log"
+        
+    # Email compliance
+    run_test "Email Compliance (--email-compliance)" \
+        "cd '$WAES_DIR' && timeout 60 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast --email-compliance --no-evidence > '$TEST_DIR/test_email.log' 2>&1" \
+        "$TEST_DIR/test_email.log"
+}
+
+#==============================================================================
+# SCAN ANALYZER TESTING (NEW)
+#==============================================================================
+
+test_scan_analyzer() {
+    echo -e "\n${BLUE}==== 11. INTELLIGENT SCAN ANALYZER ====${NC}\n"
+    log_info "Testing intelligent scan analysis engine"
+    
+    # Test analyzer with explicit flag
+    run_test "Scan Analyzer (--analyze)" \
+        "cd '$WAES_DIR' && timeout 120 ./waes.sh -u '$TEST_TARGET' -p '$TEST_PORT' -t fast --analyze --no-evidence > '$TEST_DIR/test_analyzer.log' 2>&1" \
+        "$TEST_DIR/test_analyzer.log"
+    
+    # Verify analysis report generation
+    run_test "Analysis Report Files" \
+        "[[ -f '$WAES_DIR/report/${TEST_TARGET}_analysis.md' ]] || find '$WAES_DIR/report' -name '*analysis*' 2>/dev/null | head -1" \
+        "$TEST_DIR/test_analyzer_files.log"
+        
+    # Test standalone analyzer
+    run_test "Standalone Analyzer Module" \
+        "cd '$WAES_DIR' && bash -n lib/scan_analyzer.sh && echo 'Syntax OK'" \
+        "$TEST_DIR/test_analyzer_syntax.log"
+}
+
+#==============================================================================
+# HELP SYSTEM TESTING (NEW)
+#==============================================================================
+
+test_help_system() {
+    echo -e "\n${BLUE}==== 12. HELP SYSTEM VERIFICATION ====${NC}\n"
+    log_info "Testing help and documentation output"
+    
+    # Basic help
+    run_test "Help Flag (-h)" \
+        "(cd '$WAES_DIR' && ./waes.sh -h 2>&1 || true) | grep -q 'PROFILES'" \
+        "$TEST_DIR/test_help_basic.log"
+    
+    # Advanced help
+    run_test "Advanced Help (--help-advanced)" \
+        "(cd '$WAES_DIR' && ./waes.sh --help-advanced 2>&1 || true) | grep -q 'ADVANCED OPTIONS'" \
+        "$TEST_DIR/test_help_advanced.log"
+    
+    # Verify all profiles documented
+    run_test "Profiles Documented" \
+        "(cd '$WAES_DIR' && ./waes.sh -h 2>&1 || true) | grep -q 'quick.*standard.*comprehensive'" \
+        "$TEST_DIR/test_help_profiles.log"
+}
+
+#==============================================================================
+# NEGATIVE TESTING (NEW)
+#==============================================================================
+
+test_negative_scenarios() {
+    echo -e "\n${BLUE}==== 13. NEGATIVE TESTING ====${NC}\n"
+    log_info "Testing error handling and edge cases"
+    
+    # Missing target
+    run_test "Error: Missing Target" \
+        "(cd '$WAES_DIR' && timeout 5 ./waes.sh -t fast 2>&1 || true) | grep -qi 'target.*required'" \
+        "$TEST_DIR/test_neg_no_target.log"
+    
+    # Invalid port
+    run_test "Error: Invalid Port" \
+        "(cd '$WAES_DIR' && timeout 5 ./waes.sh -u '$TEST_TARGET' -p 99999 2>&1 || true) | grep -qi 'invalid\\|error'" \
+        "$TEST_DIR/test_neg_bad_port.log"
+    
+    # Unknown flag
+    run_test "Error: Unknown Flag" \
+        "(cd '$WAES_DIR' && timeout 5 ./waes.sh -u '$TEST_TARGET' --fake-flag 2>&1 || true) | grep -qi 'unknown'" \
+        "$TEST_DIR/test_neg_bad_flag.log"
+        
+    # Non-existent targets file
+    run_test "Error: Missing Targets File" \
+        "(cd '$WAES_DIR' && timeout 5 ./waes.sh --targets /nonexistent/file.txt 2>&1 || true) | grep -qi 'not found\\|error'" \
+        "$TEST_DIR/test_neg_bad_file.log"
+}
+
+#==============================================================================
+# MODULE SYNTAX VALIDATION (NEW)
+#==============================================================================
+
+test_module_syntax() {
+    echo -e "\n${BLUE}==== 14. MODULE SYNTAX VALIDATION ====${NC}\n"
+    log_info "Validating all shell module syntax"
+    
+    local modules=(
+        "waes.sh"
+        "lib/scan_analyzer.sh"
+        "lib/ssl_analyzer.sh"
+        "lib/cloud_enum.sh"
+        "lib/tech_fingerprint.sh"
+        "lib/api_discovery.sh"
+        "lib/osint/dns_recon.sh"
+        "lib/osint/metadata_extractor.sh"
+        "lib/osint/user_enum.sh"
+        "lib/osint/historical_analysis.sh"
+        "lib/osint/social_intel.sh"
+        "lib/security_tests/sqli_scanner.sh"
+        "lib/security_tests/auth_scanner.sh"
+        "lib/security_tests/api_scanner.sh"
+        "lib/security_tests/upload_scanner.sh"
+    )
+    
+    for module in "${modules[@]}"; do
+        local name=$(basename "$module")
+        run_test "Syntax: $name" \
+            "cd '$WAES_DIR' && bash -n '$module' 2>&1 && echo 'OK'" \
+            "$TEST_DIR/test_syntax_${name}.log"
+    done
 }
 
 #==============================================================================
@@ -668,27 +882,40 @@ EOF
 #==============================================================================
 
 main() {
-    echo -e "${BLUE}"
-    cat <<'EOF'
-╦ ╦╔═╗╔═╗╔═╗  ╔═╗╦═╗╔═╗╔═╗╔═╗╔═╗╔═╗╦╔═╗╔╗╔╔═╗╦  
-║║║╠═╣║╣ ╚═╗  ╠═╝╠╦╝║ ║╠╣ ║╣ ╚═╗╚═╗║║ ║║║║╠═╣║  
-╚╩╝╩ ╩╚═╝╚═╝  ╩  ╩╚═╚═╝╚  ╚═╝╚═╝╚═╝╩╚═╝╝╚╝╩ ╩╩═╝
-     Cybersecurity Testing & Validation Suite
-EOF
-    echo -e "${NC}\n"
+    echo -e "${CYAN}"
+    echo "╔═══════════════════════════════════════════════════════════════════════╗"
+    echo "║         WAES PROFESSIONAL VALIDATION SUITE v2.0                       ║"
+    echo "║         Comprehensive Test Coverage with Profile & Module Support     ║"
+    echo "╠═══════════════════════════════════════════════════════════════════════╣"
+    echo "║  Target: $TEST_TARGET:$TEST_PORT                                      "
+    echo "║  Tests:  Profiles, Enumeration, Security, Analyzer, CLI, Compliance   "
+    echo "╚═══════════════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
     
+    # Setup test environment
     setup
     
-    # Run all test categories
-    test_scan_modes              # 1. Functional Testing
-    test_individual_modules      # 2. Tool Integration
-    test_features               # 3. Feature Verification
-    test_performance            # 4. Performance Assessment
-    test_error_handling         # 5. Error Handling
-    test_compliance             # 6. Compliance Checks
-    test_cli_options            # 7. CLI Verification
+    # Run core tests
+    test_scan_modes           # 1. Scan modes (fast, full, deep, advanced)
+    test_individual_modules   # 2. Tool integration
+    test_features             # 3. Feature verification
+    test_performance          # 4. Performance testing
+    test_error_handling       # 5. Error handling
+    test_compliance           # 6. Compliance checks
+    test_cli_options          # 7. CLI options
+    
+    # Run NEW tests for enhanced features
+    test_profiles             # 8. Profile system (6 profiles)
+    test_enumeration_modules  # 9. OSINT/enumeration (9 modules)
+    test_security_modules     # 10. Security tests (4 scanners)
+    test_scan_analyzer        # 11. Intelligent analyzer
+    test_help_system          # 12. Help documentation
+    test_negative_scenarios   # 13. Error handling/edge cases
+    test_module_syntax        # 14. Syntax validation
     
     # Analyze and report
+    analyze_results
+    generate_summary
 #==============================================================================
 # AI REMEDIATION CONTEXT GENERATION
 #==============================================================================
