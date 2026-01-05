@@ -16,10 +16,10 @@ WAES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Timeouts - longer for remote targets
 if [[ "$TEST_TARGET" == "127.0.0.1" ]] || [[ "$TEST_TARGET" == "localhost" ]]; then
     SCAN_TIMEOUT=120
-    DEEP_TIMEOUT=180
+    DEEP_TIMEOUT=300  # Increased from 180 to 300 for orchestrated scans
 else
     SCAN_TIMEOUT=600
-    DEEP_TIMEOUT=900
+    DEEP_TIMEOUT=1200  # Increased from 900 to 1200 for remote targets
 fi
 
 # Colors

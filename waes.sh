@@ -1004,7 +1004,8 @@ main() {
             echo ""
             print_info "Running intelligent scan analysis..."
             if declare -f analyze_scan_results &>/dev/null; then
-                analyze_scan_results "$TARGET" "$REPORT_DIR"
+                # Pass report directory and target for proper file naming
+                analyze_scan_results "$REPORT_DIR" "${REPORT_DIR}/${TARGET}_intelligence.json"
             else
                 print_warn "Scan analyzer module not loaded"
             fi
