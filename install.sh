@@ -12,6 +12,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Source configuration file for tool lists and settings
+source "${SCRIPT_DIR}/config/config.sh"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -19,24 +22,8 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Required packages
-APT_PACKAGES=(
-    "nmap"
-    "nikto"
-    "gobuster"
-    "dirb"
-    "whatweb"
-    "wafw00f"
-    "python3"
-    "python3-pip"
-)
-
-# Optional packages
-OPTIONAL_PACKAGES=(
-    "uniscan"
-    "feroxbuster"
-    "sslscan"
-)
+# Note: REQUIRED_TOOLS and OPTIONAL_TOOLS are now defined in config/config.sh
+# This ensures a single source of truth for all tool dependencies
 
 #==============================================================================
 # FUNCTIONS
@@ -85,7 +72,9 @@ install_apt() {
     apt-get update -qq
     
     log_info "Installing required packages..."
-    for pkg in "${APT_PACKAGES[@]}"; do
+    
+    # Install base dependencies
+    for pkg in python3 python3-pip; do
         if dpkg -s "$pkg" &>/dev/null; then
             log_success "$pkg is already installed"
         else
@@ -94,13 +83,23 @@ install_apt() {
         fi
     done
     
-    # Optional packages
-    log_info "Installing optional packages..."
-    for pkg in "${OPTIONAL_PACKAGES[@]}"; do
-        if dpkg -s "$pkg" &>/dev/null; then
-            log_success "$pkg is already installed"
+    # Install required tools from config.sh
+    for tool in "${REQUIRED_TOOLS[@]}"; do
+        if dpkg -s "$tool" &>/dev/null; then
+            log_success "$tool is already installed"
         else
-            apt-get install -y -qq "$pkg" 2>/dev/null || log_warn "Optional: $pkg not available"
+            log_info "Installing $tool..."
+            apt-get install -y -qq "$tool" || log_warn "Failed to install $tool"
+        fi
+    done
+    
+    # Optional tools from config.sh
+    log_info "Installing optional tools..."
+    for tool in "${OPTIONAL_TOOLS[@]}"; do
+        if dpkg -s "$tool" &>/dev/null; then
+            log_success "$tool is already installed"
+        else
+            apt-get install -y -qq "$tool" 2>/dev/null || log_warn "Optional: $tool not available"
         fi
     done
 }
