@@ -115,6 +115,9 @@ source "${SCRIPT_DIR}/lib/osint/historical_analysis.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/api_discovery.sh" 2>/dev/null || true
 source "${SCRIPT_DIR}/lib/osint/social_intel.sh" 2>/dev/null || true
 
+# Phase 6: Vulnerability scanners
+source "${SCRIPT_DIR}/lib/scanners/nuclei_scanner.sh" 2>/dev/null || true
+
 #==============================================================================
 # PROFILE SYSTEM - Unified scan configurations
 #==============================================================================
@@ -153,6 +156,8 @@ apply_profile() {
             INTEL_ENRICH=true
             PROFESSIONAL_REPORT=true
             ANALYZE_SCAN=true
+            NUCLEI_SCAN=true
+            NUCLEI_PROFILE="comprehensive"
             ;;
         ctf)
             # CTF competition mode
@@ -198,6 +203,8 @@ apply_profile() {
             INTEL_ENRICH=true
             OWASP_SCAN=true
             ANALYZE_SCAN=true
+            NUCLEI_SCAN=true
+            NUCLEI_PROFILE="pentest"
             ;;
         *)
             print_warn "Unknown profile: $profile (using 'standard')"
@@ -260,6 +267,13 @@ HISTORICAL_ANALYSIS=false
 API_DISCOVERY=false
 SOCIAL_OSINT=false
 FULL_ENUM=false  # Enable all enumeration
+
+# Nuclei scanner flags (Phase 6)
+NUCLEI_SCAN=false
+NUCLEI_PROFILE="standard"  # quick, bugbounty, pentest, comprehensive
+NUCLEI_SEVERITY="critical,high"
+NUCLEI_TAGS=""
+NUCLEI_UPDATE_TEMPLATES=false
 
 # Tools required for scanning
 REQUIRED_TOOLS=("nmap" "nikto" "gobuster" "dirb" "whatweb" "wafw00f")
@@ -379,7 +393,14 @@ Enumeration:
     --historical        Historical/Wayback analysis
     --api-discover      API endpoint discovery
     --social-osint      Social media OSINT
-    --full-enum         All enumeration modules
+    --full-enum         Enable ALL enumeration modules
+
+Vulnerability Scanning:
+    --nuclei            Enable nuclei template-based scanning
+    --nuclei-profile <p> Nuclei profile (quick, bugbounty, pentest, comprehensive)
+    --nuclei-severity <s> Severity filter (critical,high,medium,low,info)
+    --nuclei-tags <tags> Template tags to include
+    --nuclei-update     Update nuclei templates before scanning
 
 Intelligence:
     --analyze           Intelligent scan analysis
@@ -500,6 +521,13 @@ parse_args() {
             --api-discover) API_DISCOVERY=true; shift ;;
             --social-osint) SOCIAL_OSINT=true; shift ;;
             --full-enum) FULL_ENUM=true; DNS_RECON=true; SSL_ANALYZE=true; METADATA_EXTRACT=true; CLOUD_ENUM=true; USER_ENUM=true; TECH_FINGERPRINT=true; HISTORICAL_ANALYSIS=true; API_DISCOVERY=true; SOCIAL_OSINT=true; shift ;;
+            
+            # Nuclei flags
+            --nuclei) NUCLEI_SCAN=true; shift ;;
+            --nuclei-profile) NUCLEI_PROFILE="$2"; shift 2 ;;
+            --nuclei-severity) NUCLEI_SEVERITY="$2"; shift 2 ;;
+            --nuclei-tags) NUCLEI_TAGS="$2"; shift 2 ;;
+            --nuclei-update) NUCLEI_UPDATE_TEMPLATES=true; shift ;;
             
             -v) VERBOSE=true; shift ;;
             -q) QUIET=true; shift ;;
@@ -1066,6 +1094,36 @@ main() {
             declare -f run_social_osint &>/dev/null && run_social_osint "$TARGET" "$REPORT_DIR" || print_warn "Social OSINT not loaded"
         fi
         
+        # Run nuclei vulnerability scanner
+        if [[ "$NUCLEI_SCAN" == "true" ]]; then
+            echo ""
+            print_header "Nuclei Vulnerability Scanner"
+            
+            # Update templates if requested
+            if [[ "$NUCLEI_UPDATE_TEMPLATES" == "true" ]]; then
+                if declare -f update_nuclei_templates &>/dev/null; then
+                    update_nuclei_templates
+                fi
+            fi
+            
+            # Run nuclei scan
+            if declare -f run_nuclei_scan &>/dev/null; then
+                local base_url="${PROTOCOL}://${TARGET}"
+                [[ "$PORT" != "80" ]] && [[ "$PORT" != "443" ]] && base_url+=":${PORT}"
+                
+                print_info "Running nuclei scan with profile: $NUCLEI_PROFILE"
+                run_nuclei_scan "$base_url" "$REPORT_DIR" "$NUCLEI_PROFILE"
+                
+                # Extract critical findings
+                if declare -f export_critical_findings &>/dev/null; then
+                    export_critical_findings "${REPORT_DIR}/${TARGET}_nuclei.json"
+                fi
+            else
+                print_warn "Nuclei scanner module not loaded"
+            fi
+        fi
+        
+        print_success "Scan completed for: $TARGET"
         # Reset protocol for next port iteration
         PROTOCOL=""
     done

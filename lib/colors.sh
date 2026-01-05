@@ -101,3 +101,65 @@ print_separator() {
     local char=${2:--}
     printf '%*s\n' "$width" '' | tr ' ' "$char"
 }
+
+#==============================================================================
+# PROGRESS BAR FUNCTIONS
+#==============================================================================
+
+# Progress tracking variables
+PROGRESS_TOTAL=100
+PROGRESS_CURRENT=0
+PROGRESS_BAR_WIDTH=50
+
+# Initialize progress tracking
+init_progress() {
+    PROGRESS_TOTAL="${1:-100}"
+    PROGRESS_CURRENT=0
+    PROGRESS_BAR_WIDTH=50
+}
+
+# Update and display progress bar
+show_progress() {
+    local current="$1"
+    local total="$2"
+    local message="${3:-Processing}"
+    
+    # Skip if not a terminal or QUIET mode
+    [[ ! -t 1 ]] || [[ "${QUIET:-false}" == "true" ]] && return
+    
+    # Calculate percentage
+    local percent=$((current * 100 / total))
+    local filled=$((current * PROGRESS_BAR_WIDTH / total))
+    local empty=$((PROGRESS_BAR_WIDTH - filled))
+    
+    # Build progress bar
+    local bar="["
+    for ((i=0; i<filled; i++)); do bar+="█"; done
+    for ((i=0; i<empty; i++)); do bar+="░"; done
+    bar+="]"
+    
+    # Truncate message if too long
+    local display_msg
+    display_msg=$(printf '%-30s' "${message:0:30}")
+    
+    # Print progress (overwrite previous line)
+    if use_colors; then
+        printf "\r${BLUE}%s${RESET} ${GREEN}%3d%%${RESET} ${YELLOW}%s${RESET}" "$bar" "$percent" "$display_msg"
+    else
+        printf "\r%s %3d%% %s" "$bar" "$percent" "$display_msg"
+    fi
+}
+
+# Complete progress bar
+complete_progress() {
+    local message="${1:-Complete}"
+    show_progress "$PROGRESS_TOTAL" "$PROGRESS_TOTAL" "$message"
+    echo "" # New line after completion
+}
+
+# Update progress with step name
+update_progress() {
+    local step_name="$1"
+    ((PROGRESS_CURRENT++))
+    show_progress "$PROGRESS_CURRENT" "$PROGRESS_TOTAL" "$step_name"
+}

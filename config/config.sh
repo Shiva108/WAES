@@ -82,6 +82,7 @@ OPTIONAL_TOOLS=(
     "uniscan"
     "feroxbuster"
     "xsser"
+    "nuclei"
 )
 
 # Gobuster status codes to report
