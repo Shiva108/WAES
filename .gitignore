@@ -288,3 +288,4 @@ vulners-nse-scripts/
 exploit-database/
 PayloadsAllTheThings/
 lib/state_manager.sh
+WAES_Functional_Inventory.md
