@@ -289,3 +289,4 @@ exploit-database/
 PayloadsAllTheThings/
 lib/state_manager.sh
 WAES_Functional_Inventory.md
+.agent/rules/snyk_rules.md
